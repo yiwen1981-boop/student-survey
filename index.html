@@ -465,7 +465,7 @@
   <div class="page active" id="page1">
     <div class="info-card">
       親愛的同學，你好！<br>
-      這份問卷希望了解你一週的生活作息，包括睡眠、補習、休閒等時間分配。<br>
+      國家人權委員會希望透過這份問卷瞭解兒少的休閒及發展權利情形，因此想請您填寫一週的生活作息，包括睡眠、補習、休閒等時間。<br>
       請根據<strong>上週的實際情況</strong>填寫，不需要填「理想中」的狀況。全部填完約需 5–8 分鐘。<br>
       資料僅供研究統計使用，不會對外公開，謝謝你的配合！
     </div>
@@ -476,21 +476,20 @@
         <div class="form-grid">
           <div class="form-group">
             <label>姓名 <span class="req">*</span></label>
-            <input type="text" id="f_name" placeholder="請填真實姓名" autocomplete="name">
+            <input type="text" id="f_name" placeholder="請填寫真實姓名" autocomplete="name">
             <div class="field-error" id="e_name">請填寫姓名</div>
           </div>
           <div class="form-group">
-            <label>就讀學校 <span class="req">*</span></label>
-            <input type="text" id="f_school" placeholder="例：XX 國中、XX 高中">
-            <div class="field-error" id="e_school">請填寫就讀學校</div>
+            <label>就讀學校為公立或私立學校 <span class="req">*</span></label
+            <div class="field-error" id="e_school">請填寫公立或私立</div>
           </div>
           <div class="form-group">
             <label>年級 <span class="req">*</span></label>
             <select id="f_grade">
               <option value="">── 請選擇 ──</option>
-              <option>國中一年級</option>
-              <option>國中二年級</option>
-              <option>國中三年級</option>
+              <option>七年級</option>
+              <option>八年級</option>
+              <option>九年級</option>
               <option>高中一年級</option>
               <option>高中二年級</option>
               <option>高中三年級</option>
@@ -660,7 +659,7 @@ const WEEKEND_ROWS = [
   { key: "wakeup",    label: "起床時間",  type: "time" },
 
   { type: "section", label: "二、用餐" },
-  { key: "lunch",     label: "午餐",     type: "check", opts: ["自煮","家人準備","外食/叫外送","不吃"] },
+  { key: "lunch",     label: "午餐",     type: "check", opts: ["學校營養午餐","自帶便當","外食/叫外送","不吃"] },
 
   { type: "section", label: "三、活動" },
   { key: "cramStart", label: "補習", sub: "開始時間",  type: "time" },
