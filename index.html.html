@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學生一週生活作息調查</title>
+<style>
+  :root {
+    --navy:    #1B3A5C;
+    --blue:    #2E6DA4;
+    --sky:     #5BA4D4;
+    --mint:    #3AAFA9;
+    --pale:    #EAF4FB;
+    --pale2:   #F0FAF9;
+    --cream:   #FAFBFC;
+    --border:  #C8DCF0;
+    --grey:    #6B7A8D;
+    --dark:    #1A2432;
+    --error:   #D64045;
+    --success: #2E9E6B;
+    --white:   #FFFFFF;
+    --shadow:  0 2px 12px rgba(27,58,92,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "微軟正黑體", "Noto Sans TC", "PingFang TC", sans-serif;
+    background: #EEF4FA;
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: linear-gradient(135deg, var(--navy) 0%, #2A5298 100%);
+    color: white;
+    padding: 36px 24px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 40px,
+      rgba(255,255,255,0.03) 40px,
+      rgba(255,255,255,0.03) 80px
+    );
+  }
+  .site-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    position: relative;
+  }
+  .site-header p {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    position: relative;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    background: white;
+    padding: 14px 24px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #D8E8F5;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--mint));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress-label {
+    font-size: 0.8rem;
+    color: var(--grey);
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: right;
+  }
+
+  /* ── Main layout ── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* ── Pages ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--navy);
+    color: white;
+    padding: 14px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header .icon { font-size: 1.2rem; }
+  .card-body { padding: 24px 20px; }
+
+  /* ── Info card ── */
+  .info-card {
+    background: var(--pale);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--navy);
+  }
+  .info-card strong { color: var(--blue); }
+
+  /* ── Basic info form ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .form-group label .req { color: var(--error); margin-left: 2px; }
+  .form-group input,
+  .form-group select {
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    color: var(--dark);
+    outline: none;
+    transition: border-color 0.2s;
+    background: white;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: var(--blue); }
+  .form-group input.error,
+  .form-group select.error { border-color: var(--error); }
+
+  /* ── Schedule table ── */
+  .schedule-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .schedule-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+
+  .schedule-table th {
+    background: var(--navy);
+    color: white;
+    padding: 10px 8px;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+  }
+  .schedule-table th:first-child {
+    background: #142C47;
+    text-align: left;
+    padding-left: 14px;
+    min-width: 130px;
+  }
+  .schedule-table th.weekend { background: #2E5F8A; }
+
+  /* Section rows */
+  .schedule-table tr.section-row td {
+    background: #1B3A5C;
+    color: white;
+    font-weight: 700;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Data rows */
+  .schedule-table tr.data-row td {
+    border-bottom: 1px solid #E0EDF8;
+    vertical-align: middle;
+    padding: 6px 6px;
+  }
+  .schedule-table tr.data-row:nth-child(even) td { background: #F5F9FD; }
+  .schedule-table tr.data-row:hover td { background: #EAF4FB; }
+
+  .row-label {
+    padding: 6px 8px 6px 14px !important;
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+    font-size: 0.82rem;
+    min-width: 130px;
+  }
+  .row-sublabel {
+    font-size: 0.74rem;
+    color: var(--grey);
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* N/A cells */
+  .na-cell {
+    background: #F0F0F0 !important;
+    color: #BBBBBB;
+    text-align: center;
+    font-size: 0.8rem;
+  }
+
+  /* ── Input types inside table ── */
+  .t-time {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 6px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    text-align: center;
+    color: var(--dark);
+    background: white;
+    outline: none;
+    min-width: 80px;
+  }
+  .t-time:focus { border-color: var(--blue); background: var(--pale); }
+  .t-time.error { border-color: var(--error); }
+
+  /* time range: two inputs */
+  .time-range {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    justify-content: center;
+  }
+  .time-range .sep {
+    font-size: 0.75rem;
+    color: var(--grey);
+    flex-shrink: 0;
+  }
+  .time-range .t-time { min-width: 68px; }
+
+  /* checkboxes */
+  .check-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 2px 4px;
+  }
+  .check-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    color: var(--dark);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .check-group input[type=checkbox] {
+    width: 13px; height: 13px;
+    accent-color: var(--blue);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* text input */
+  .t-text {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 6px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    color: var(--dark);
+    background: white;
+    outline: none;
+    min-width: 80px;
+  }
+  .t-text:focus { border-color: var(--blue); background: var(--pale); }
+  .t-text::placeholder { color: #AABBCC; }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    gap: 12px;
+  }
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.03em;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), var(--mint));
+    color: white;
+    box-shadow: 0 3px 10px rgba(46,109,164,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(46,109,164,0.35); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: white;
+    color: var(--grey);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--pale); color: var(--navy); }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--mint), #2E9E6B);
+    color: white;
+    box-shadow: 0 3px 10px rgba(58,175,169,0.3);
+    padding: 14px 36px;
+    font-size: 1rem;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(58,175,169,0.35); }
+
+  /* ── Toast / status ── */
+  .toast {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--dark);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    max-width: 90vw;
+    text-align: center;
+  }
+  .toast.success { background: var(--success); }
+  .toast.error-t { background: var(--error); }
+  .toast.show { display: block; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+  /* ── Thank you screen ── */
+  .thankyou {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .thankyou .big-icon { font-size: 4rem; margin-bottom: 16px; }
+  .thankyou h2 { font-size: 1.6rem; color: var(--navy); margin-bottom: 10px; }
+  .thankyou p { color: var(--grey); font-size: 0.95rem; line-height: 1.7; }
+
+  /* ── Sending overlay ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    color: white;
+    font-size: 1rem;
+  }
+  .overlay.show { display: flex; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Validation error msg ── */
+  .field-error {
+    font-size: 0.78rem;
+    color: var(--error);
+    margin-top: 4px;
+    display: none;
+  }
+  .field-error.show { display: block; }
+
+  /* ── Weekend page note ── */
+  .page-note {
+    background: var(--pale2);
+    border-left: 4px solid var(--mint);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.86rem;
+    color: var(--navy);
+    margin-bottom: 16px;
+    line-height: 1.7;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .site-header h1 { font-size: 1.3rem; }
+    .btn { padding: 11px 18px; font-size: 0.88rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>📋 學生一週生活作息調查</h1>
+  <p>國中 ／ 高中版 ・ 請根據上週實際情況填寫</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">第 1 頁，共 3 頁</div>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════════════════════════
+       PAGE 1：基本資料
+  ══════════════════════════════════ -->
+  <div class="page active" id="page1">
+    <div class="info-card">
+      親愛的同學，你好！<br>
+      這份問卷希望了解你一週的生活作息，包括睡眠、補習、休閒等時間分配。<br>
+      請根據<strong>上週的實際情況</strong>填寫，不需要填「理想中」的狀況。全部填完約需 5–8 分鐘。<br>
+      資料僅供研究統計使用，不會對外公開，謝謝你的配合！
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="icon">👤</span> 基本資料</div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>姓名 <span class="req">*</span></label>
+            <input type="text" id="f_name" placeholder="請填真實姓名" autocomplete="name">
+            <div class="field-error" id="e_name">請填寫姓名</div>
+          </div>
+          <div class="form-group">
+            <label>就讀學校 <span class="req">*</span></label>
+            <input type="text" id="f_school" placeholder="例：XX 國中、XX 高中">
+            <div class="field-error" id="e_school">請填寫就讀學校</div>
+          </div>
+          <div class="form-group">
+            <label>年級 <span class="req">*</span></label>
+            <select id="f_grade">
+              <option value="">── 請選擇 ──</option>
+              <option>國中一年級</option>
+              <option>國中二年級</option>
+              <option>國中三年級</option>
+              <option>高中一年級</option>
+              <option>高中二年級</option>
+              <option>高中三年級</option>
+            </select>
+            <div class="field-error" id="e_grade">請選擇年級</div>
+          </div>
+          <div class="form-group">
+            <label>性別</label>
+            <select id="f_gender">
+              <option value="">── 請選擇 ──</option>
+              <option>男</option>
+              <option>女</option>
+              <option>非二元性別／其他</option>
+              <option>不想回答</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>平日通勤方式（可複選）</label>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" value="步行" class="commute"> 步行</label>
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" value="騎腳踏車/電動車" class="commute"> 騎腳踏車／電動車</label>
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" value="公車/捷運" class="commute"> 公車／捷運</label>
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" value="家長接送" class="commute"> 家長接送</label>
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" value="其他" class="commute"> 其他</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goPage(2)">下一步：平日作息 →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       PAGE 2：平日（一～五）
+  ══════════════════════════════════ -->
+  <div class="page" id="page2">
+    <div class="page-note">
+      📅 <strong>平日作息（星期一～五）</strong><br>
+      時間欄請填入 <strong>HH:MM</strong> 格式（例：07:30）。時間區間請填開始與結束。<br>
+      若當天無該活動，請留空即可，不需填寫。
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">🗓</span> 平日一週作息表</div>
+      <div class="card-body" style="padding:0">
+        <div class="schedule-wrap">
+          <table class="schedule-table" id="weekdayTable">
+            <thead>
+              <tr>
+                <th>活動項目</th>
+                <th>星期一</th><th>星期二</th><th>星期三</th><th>星期四</th><th>星期五</th>
+              </tr>
+            </thead>
+            <tbody id="weekdayBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goPage(1)">← 上一頁</button>
+      <button class="btn btn-primary" onclick="goPage(3)">下一步：週末作息 →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       PAGE 3：週末（六、日）
+  ══════════════════════════════════ -->
+  <div class="page" id="page3">
+    <div class="page-note">
+      🏖 <strong>週末作息（星期六、日）</strong><br>
+      填法與平日相同。若跨日睡覺（如凌晨 1 點），請填 <strong>01:00</strong>（隔天時間）。
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">🌤</span> 週末作息表</div>
+      <div class="card-body" style="padding:0">
+        <div class="schedule-wrap">
+          <table class="schedule-table" id="weekendTable">
+            <thead>
+              <tr>
+                <th>活動項目</th>
+                <th class="weekend">星期六</th>
+                <th class="weekend">星期日</th>
+              </tr>
+            </thead>
+            <tbody id="weekendBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goPage(2)">← 上一頁</button>
+      <button class="btn btn-submit" onclick="submitForm()">✅ 送出問卷</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       PAGE 4：感謝頁
+  ══════════════════════════════════ -->
+  <div class="page" id="page4">
+    <div class="card">
+      <div class="thankyou">
+        <div class="big-icon">🎉</div>
+        <h2>感謝你的填寫！</h2>
+        <p>你的作息資料已成功送出。<br>問卷資料僅供研究統計，不會對外公開，謝謝你！</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Overlay -->
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div>資料送出中，請稍候…</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// 【設定區】將下方 URL 換成你的 Google Apps Script 網址
+// ═══════════════════════════════════════════
+const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+
+// ════════════════════════════════════════════
+// 表格結構定義
+// ════════════════════════════════════════════
+const WEEKDAY_ROWS = [
+  { type: "section", label: "一、早晨" },
+  { key: "wakeup",       label: "起床時間",         type: "time" },
+  { key: "leave",        label: "出門時間",          type: "time" },
+  { key: "arrive",       label: "到校時間",          type: "time" },
+  { key: "morningExam",  label: "早自習", sub: "考試科目（無則留空）", type: "text", ph: "科目名稱" },
+
+  { type: "section", label: "二、在校" },
+  { key: "lunch",        label: "午餐",              type: "check", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"] },
+  { key: "period8",      label: "第八節內容",        type: "check", opts: ["考試","上進度","複習","無"] },
+  { key: "schoolEnd",    label: "放學時間",          type: "time" },
+
+  { type: "section", label: "三、放學後" },
+  { key: "cramStart",    label: "補習", sub: "開始時間",  type: "time" },
+  { key: "cramEnd",      label: "補習", sub: "結束時間",  type: "time" },
+  { key: "studyStart",   label: "課輔/留校自習", sub: "開始時間", type: "time" },
+  { key: "studyEnd",     label: "課輔/留校自習", sub: "結束時間", type: "time" },
+  { key: "clubStart",    label: "才藝班/社團", sub: "開始時間",   type: "time" },
+  { key: "clubEnd",      label: "才藝班/社團", sub: "結束時間",   type: "time" },
+  { key: "workStart",    label: "打工", sub: "開始時間",    type: "time" },
+  { key: "workEnd",      label: "打工", sub: "結束時間",    type: "time" },
+  { key: "workType",     label: "打工內容",          type: "text", ph: "例：超商，若無留空" },
+
+  { type: "section", label: "四、晚間" },
+  { key: "hwStart",      label: "寫作業", sub: "開始時間",  type: "time" },
+  { key: "hwEnd",        label: "寫作業", sub: "結束時間",  type: "time" },
+  { key: "gameStart",    label: "打電動/上社群", sub: "開始時間", type: "time" },
+  { key: "gameEnd",      label: "打電動/上社群", sub: "結束時間", type: "time" },
+  { key: "gameName",     label: "遊戲/社群名稱",    type: "text", ph: "例：IG、Minecraft" },
+  { key: "leisure",      label: "其他休閒活動",      type: "text", ph: "例：看書、運動" },
+  { key: "sleep",        label: "睡覺時間", sub: "跨日填隔天，例凌晨1點填01:00", type: "time" },
+];
+
+const WEEKEND_ROWS = [
+  { type: "section", label: "一、早晨" },
+  { key: "wakeup",    label: "起床時間",  type: "time" },
+
+  { type: "section", label: "二、用餐" },
+  { key: "lunch",     label: "午餐",     type: "check", opts: ["自煮","家人準備","外食/叫外送","不吃"] },
+
+  { type: "section", label: "三、活動" },
+  { key: "cramStart", label: "補習", sub: "開始時間",  type: "time" },
+  { key: "cramEnd",   label: "補習", sub: "結束時間",  type: "time" },
+  { key: "clubStart", label: "才藝班/社團", sub: "開始時間", type: "time" },
+  { key: "clubEnd",   label: "才藝班/社團", sub: "結束時間", type: "time" },
+  { key: "workStart", label: "打工", sub: "開始時間",  type: "time" },
+  { key: "workEnd",   label: "打工", sub: "結束時間",  type: "time" },
+  { key: "workType",  label: "打工內容", type: "text", ph: "例：超商，若無留空" },
+
+  { type: "section", label: "四、晚間" },
+  { key: "hwStart",   label: "寫作業", sub: "開始時間", type: "time" },
+  { key: "hwEnd",     label: "寫作業", sub: "結束時間", type: "time" },
+  { key: "gameStart", label: "打電動/上社群", sub: "開始時間", type: "time" },
+  { key: "gameEnd",   label: "打電動/上社群", sub: "結束時間", type: "time" },
+  { key: "gameName",  label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
+  { key: "leisure",   label: "其他休閒活動",  type: "text", ph: "例：看書、運動" },
+  { key: "sleep",     label: "睡覺時間", sub: "跨日填隔天，例凌晨1點填01:00", type: "time" },
+];
+
+const WEEKDAY_COLS = ["mon","tue","wed","thu","fri"];
+const WEEKEND_COLS = ["sat","sun"];
+
+// ════════════════════════════════════════════
+// Build tables
+// ════════════════════════════════════════════
+function buildTable(rows, cols, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = "";
+
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    if (row.type === "section") {
+      tr.className = "section-row";
+      const td = document.createElement("td");
+      td.colSpan = cols.length + 1;
+      td.textContent = row.label;
+      tr.appendChild(td);
+    } else {
+      tr.className = "data-row";
+
+      // Label cell
+      const tdLabel = document.createElement("td");
+      tdLabel.className = "row-label";
+      tdLabel.innerHTML = row.label + (row.sub ? `<span class="row-sublabel">${row.sub}</span>` : "");
+      tr.appendChild(tdLabel);
+
+      cols.forEach(col => {
+        const td = document.createElement("td");
+        td.style.textAlign = "center";
+
+        if (row.type === "time") {
+          const inp = document.createElement("input");
+          inp.type = "time";
+          inp.className = "t-time";
+          inp.id = `${col}_${row.key}`;
+          inp.name = `${col}_${row.key}`;
+          td.appendChild(inp);
+
+        } else if (row.type === "check") {
+          const div = document.createElement("div");
+          div.className = "check-group";
+          row.opts.forEach(opt => {
+            const lbl = document.createElement("label");
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = opt;
+            cb.className = `cb_${col}_${row.key}`;
+            lbl.appendChild(cb);
+            lbl.appendChild(document.createTextNode(" " + opt));
+            div.appendChild(lbl);
+          });
+          td.appendChild(div);
+
+        } else if (row.type === "text") {
+          const inp = document.createElement("input");
+          inp.type = "text";
+          inp.className = "t-text";
+          inp.id = `${col}_${row.key}`;
+          inp.name = `${col}_${row.key}`;
+          inp.placeholder = row.ph || "";
+          td.appendChild(inp);
+        }
+
+        tr.appendChild(td);
+      });
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// ════════════════════════════════════════════
+// Page navigation
+// ════════════════════════════════════════════
+let currentPage = 1;
+const TOTAL_PAGES = 3;
+
+function goPage(n) {
+  if (n > currentPage && !validatePage(currentPage)) return;
+
+  document.getElementById("page" + currentPage).classList.remove("active");
+  currentPage = n;
+  document.getElementById("page" + currentPage).classList.add("active");
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function updateProgress() {
+  const pct = ((currentPage - 1) / TOTAL_PAGES * 100).toFixed(0);
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent = `第 ${currentPage} 頁，共 ${TOTAL_PAGES} 頁`;
+}
+
+// ════════════════════════════════════════════
+// Validation
+// ════════════════════════════════════════════
+function validatePage(page) {
+  if (page === 1) {
+    let ok = true;
+    const checks = [
+      ["f_name",   "e_name"],
+      ["f_school", "e_school"],
+      ["f_grade",  "e_grade"],
+    ];
+    checks.forEach(([fid, eid]) => {
+      const el = document.getElementById(fid);
+      const err = document.getElementById(eid);
+      if (!el.value.trim()) {
+        el.classList.add("error");
+        err.classList.add("show");
+        ok = false;
+      } else {
+        el.classList.remove("error");
+        err.classList.remove("show");
+      }
+    });
+    if (!ok) showToast("請填寫所有必填欄位（標有 * 的欄位）", "error-t");
+    return ok;
+  }
+  return true;
+}
+
+// ════════════════════════════════════════════
+// Collect data
+// ════════════════════════════════════════════
+function collectData() {
+  const data = {
+    timestamp: new Date().toISOString(),
+    name:   document.getElementById("f_name").value.trim(),
+    school: document.getElementById("f_school").value.trim(),
+    grade:  document.getElementById("f_grade").value,
+    gender: document.getElementById("f_gender").value,
+    commute: [...document.querySelectorAll(".commute:checked")].map(c => c.value).join("、"),
+  };
+
+  // Weekdays
+  WEEKDAY_COLS.forEach(col => {
+    WEEKDAY_ROWS.forEach(row => {
+      if (row.type === "section") return;
+      if (row.type === "check") {
+        const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
+        data[`${col}_${row.key}`] = checked.join("、");
+      } else {
+        const el = document.getElementById(`${col}_${row.key}`);
+        data[`${col}_${row.key}`] = el ? el.value : "";
+      }
+    });
+  });
+
+  // Weekend
+  WEEKEND_COLS.forEach(col => {
+    WEEKEND_ROWS.forEach(row => {
+      if (row.type === "section") return;
+      if (row.type === "check") {
+        const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
+        data[`${col}_${row.key}`] = checked.join("、");
+      } else {
+        const el = document.getElementById(`${col}_${row.key}`);
+        data[`${col}_${row.key}`] = el ? el.value : "";
+      }
+    });
+  });
+
+  return data;
+}
+
+// ════════════════════════════════════════════
+// Submit
+// ════════════════════════════════════════════
+async function submitForm() {
+  if (!validatePage(3)) return;
+
+  const data = collectData();
+
+  // If no script URL set, just show success (demo mode)
+  if (SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+    console.log("Demo mode – data that would be sent:", data);
+    showThankyou();
+    return;
+  }
+
+  document.getElementById("overlay").classList.add("show");
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    document.getElementById("overlay").classList.remove("show");
+    showThankyou();
+  } catch (err) {
+    document.getElementById("overlay").classList.remove("show");
+    showToast("送出失敗，請檢查網路後再試一次。", "error-t");
+    console.error(err);
+  }
+}
+
+function showThankyou() {
+  document.getElementById("page" + currentPage).classList.remove("active");
+  document.getElementById("page4").classList.add("active");
+  document.getElementById("progressFill").style.width = "100%";
+  document.getElementById("progressLabel").textContent = "已完成";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ════════════════════════════════════════════
+// Toast helper
+// ════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (type ? " " + type : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+// ════════════════════════════════════════════
+// Init
+// ════════════════════════════════════════════
+buildTable(WEEKDAY_ROWS, WEEKDAY_COLS, "weekdayBody");
+buildTable(WEEKEND_ROWS, WEEKEND_COLS, "weekendBody");
+updateProgress();
+</script>
+</body>
+</html>
+HTMLEOF
