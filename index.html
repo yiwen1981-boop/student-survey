@@ -524,9 +524,9 @@
             <label>年級 <span class="req">*</span></label>
             <select id="f_grade">
               <option value="">── 請選擇 ──</option>
-              <option>國中七年級</option>
-              <option>國中八年級</option>
-              <option>國中九年級</option>
+              <option>國中一年級</option>
+              <option>國中二年級</option>
+              <option>國中三年級</option>
               <option>高中一年級</option>
               <option>高中二年級</option>
               <option>高中三年級</option>
@@ -600,7 +600,8 @@
   <div class="page" id="page3">
     <div class="page-note">
       🏖 <strong>週末作息（星期六、日）</strong><br>
-      填法與平日相同。若跨日睡覺（如凌晨 1 點），請填 <strong>01:00</strong>（隔天時間）。
+      填法與平日相同。補習可點「＋ 新增一科補習」依科目分開填寫。<br>
+      睡覺時間若跨日（凌晨），下拉選單中已含 00:00～03:45 可直接選取。
     </div>
     <div class="card">
       <div class="card-header"><span class="icon">🌤</span> 週末作息表</div>
@@ -656,69 +657,172 @@
 const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 
 // ════════════════════════════════════════════
+// 時間選項產生器（24小時制，每15分鐘）
+// ════════════════════════════════════════════
+function genTimes(startH, endH) {
+  // startH, endH 為小時數（可跨日，endH 可 > 23）
+  const opts = [""];
+  for (let h = startH; h <= endH; h++) {
+    const hh = (h % 24).toString().padStart(2, "0");
+    ["00","15","30","45"].forEach(mm => {
+      opts.push(`${hh}:${mm}`);
+    });
+  }
+  return opts;
+}
+
+// 各題目的時間範圍設定
+const TIME_RANGES = {
+  wakeup:     genTimes(4, 11),   // 起床 04:00～11:45
+  leave:      genTimes(5, 10),   // 出門 05:00～10:45
+  arrive:     genTimes(6, 11),   // 到校 06:00～11:45
+  schoolEnd:  genTimes(14, 21),  // 放學 14:00～21:45
+  sleep:      genTimes(20, 27),  // 睡覺 20:00～03:45（跨日）
+  // 時間區間（開始/結束）使用同一個全天範圍
+  range:      genTimes(6, 27),   // 06:00～03:45（跨日）
+};
+
+function makeTimeSelect(id, rangeKey) {
+  const sel = document.createElement("select");
+  sel.className = "t-time";
+  sel.id = id;
+  sel.name = id;
+  const times = TIME_RANGES[rangeKey] || TIME_RANGES.range;
+  times.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t === "" ? "── 選擇 ──" : t;
+    sel.appendChild(opt);
+  });
+  return sel;
+}
+
+function makeTimeRangeCell(col, key) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;flex-direction:column;gap:3px;align-items:center;";
+  const s = makeTimeSelect(`${col}_${key}Start`, "range");
+  const sep = document.createElement("span");
+  sep.textContent = "↓";
+  sep.style.cssText = "font-size:0.7rem;color:#9AA;";
+  const e = makeTimeSelect(`${col}_${key}End`, "range");
+  wrap.appendChild(s);
+  wrap.appendChild(sep);
+  wrap.appendChild(e);
+  return wrap;
+}
+
+// ════════════════════════════════════════════
 // 表格結構定義
 // ════════════════════════════════════════════
 const WEEKDAY_ROWS = [
   { type: "section", label: "一、早晨" },
-  { key: "wakeup",       label: "起床時間",         type: "time" },
-  { key: "leave",        label: "出門時間",          type: "time" },
-  { key: "arrive",       label: "到校時間",          type: "time" },
-  { key: "morningExam",  label: "早自習", sub: "考試科目（無則留空）", type: "text", ph: "科目名稱" },
+  { key: "wakeup",      label: "起床時間",   type: "timesel", rangeKey: "wakeup" },
+  { key: "leave",       label: "出門時間",   type: "timesel", rangeKey: "leave" },
+  { key: "arrive",      label: "到校時間",   type: "timesel", rangeKey: "arrive" },
+  { key: "morningExam", label: "早自習", sub: "考試科目（無則留空）", type: "text", ph: "科目名稱" },
 
   { type: "section", label: "二、在校" },
-  { key: "lunch",        label: "午餐",              type: "check+text", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"], textKey: "lunchMenu", ph: "營養午餐菜色（選學校午餐者請填）" },
-  { key: "period8",      label: "第八節內容",        type: "check", opts: ["考試","上進度","複習","無"] },
-  { key: "schoolEnd",    label: "放學時間",          type: "time" },
+  { key: "lunch",    label: "午餐", type: "check+text", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"], textKey: "lunchMenu", ph: "營養午餐菜色（選學校午餐者請填）" },
+  { key: "period8",  label: "第八節內容", type: "check", opts: ["考試","上進度","複習","無"] },
+  { key: "schoolEnd",label: "放學時間",   type: "timesel", rangeKey: "schoolEnd" },
 
   { type: "section", label: "三、放學後" },
-  { key: "cramStart",    label: "補習", sub: "開始時間",  type: "time" },
-  { key: "cramEnd",      label: "補習", sub: "結束時間",  type: "time" },
-  { key: "studyStart",   label: "課輔/留校自習", sub: "開始時間", type: "time" },
-  { key: "studyEnd",     label: "課輔/留校自習", sub: "結束時間", type: "time" },
-  { key: "clubStart",    label: "才藝班/社團", sub: "開始時間",   type: "time" },
-  { key: "clubEnd",      label: "才藝班/社團", sub: "結束時間",   type: "time" },
-  { key: "workStart",    label: "打工", sub: "開始時間",    type: "time" },
-  { key: "workEnd",      label: "打工", sub: "結束時間",    type: "time" },
-  { key: "workType",     label: "打工內容",          type: "text", ph: "例：超商，若無留空" },
+  { key: "cram",     label: "補習",         type: "timerange" },
+  { key: "study",    label: "課輔/留校自習", type: "timerange" },
+  { key: "club",     label: "才藝班/社團",  type: "timerange" },
+  { key: "work",     label: "打工",         type: "timerange" },
+  { key: "workType", label: "打工內容",     type: "text", ph: "例：超商，若無留空" },
 
   { type: "section", label: "四、晚間" },
-  { key: "hwStart",      label: "寫作業", sub: "開始時間",  type: "time" },
-  { key: "hwEnd",        label: "寫作業", sub: "結束時間",  type: "time" },
-  { key: "gameStart",    label: "打電動/上社群", sub: "開始時間", type: "time" },
-  { key: "gameEnd",      label: "打電動/上社群", sub: "結束時間", type: "time" },
-  { key: "gameName",     label: "遊戲/社群名稱",    type: "text", ph: "例：IG、Minecraft" },
-  { key: "leisure",      label: "其他休閒活動",      type: "text", ph: "例：看書、運動" },
-  { key: "sleep",        label: "睡覺時間", sub: "跨日填隔天，例凌晨1點填01:00", type: "time" },
+  { key: "hw",       label: "寫作業",       type: "timerange" },
+  { key: "game",     label: "打電動/上社群", type: "timerange" },
+  { key: "gameName", label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
+  { key: "leisure",  label: "其他休閒活動", type: "text", ph: "例：看書、運動" },
+  { key: "sleep",    label: "睡覺時間",     type: "timesel", rangeKey: "sleep" },
 ];
 
 const WEEKEND_ROWS = [
   { type: "section", label: "一、早晨" },
-  { key: "wakeup",    label: "起床時間",  type: "time" },
+  { key: "wakeup",   label: "起床時間",  type: "timesel", rangeKey: "wakeup" },
 
   { type: "section", label: "二、用餐" },
-  { key: "lunch",     label: "午餐",     type: "check", opts: ["自煮","家人準備","外食/叫外送","不吃"] },
+  { key: "lunch",    label: "午餐", type: "check", opts: ["自煮","家人準備","外食/叫外送","不吃"] },
 
   { type: "section", label: "三、活動" },
-  { key: "cramStart", label: "補習", sub: "開始時間",  type: "time" },
-  { key: "cramEnd",   label: "補習", sub: "結束時間",  type: "time" },
-  { key: "clubStart", label: "才藝班/社團", sub: "開始時間", type: "time" },
-  { key: "clubEnd",   label: "才藝班/社團", sub: "結束時間", type: "time" },
-  { key: "workStart", label: "打工", sub: "開始時間",  type: "time" },
-  { key: "workEnd",   label: "打工", sub: "結束時間",  type: "time" },
-  { key: "workType",  label: "打工內容", type: "text", ph: "例：超商，若無留空" },
+  { key: "cram",     label: "補習",        type: "dynamic_cram" },
+  { key: "club",     label: "才藝班/社團", type: "timerange" },
+  { key: "work",     label: "打工",        type: "timerange" },
+  { key: "workType", label: "打工內容",    type: "text", ph: "例：超商，若無留空" },
 
   { type: "section", label: "四、晚間" },
-  { key: "hwStart",   label: "寫作業", sub: "開始時間", type: "time" },
-  { key: "hwEnd",     label: "寫作業", sub: "結束時間", type: "time" },
-  { key: "gameStart", label: "打電動/上社群", sub: "開始時間", type: "time" },
-  { key: "gameEnd",   label: "打電動/上社群", sub: "結束時間", type: "time" },
-  { key: "gameName",  label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
-  { key: "leisure",   label: "其他休閒活動",  type: "text", ph: "例：看書、運動" },
-  { key: "sleep",     label: "睡覺時間", sub: "跨日填隔天，例凌晨1點填01:00", type: "time" },
+  { key: "hw",       label: "寫作業",       type: "timerange" },
+  { key: "game",     label: "打電動/上社群", type: "timerange" },
+  { key: "gameName", label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
+  { key: "leisure",  label: "其他休閒活動",  type: "text", ph: "例：看書、運動" },
+  { key: "sleep",    label: "睡覺時間",     type: "timesel", rangeKey: "sleep" },
 ];
 
 const WEEKDAY_COLS = ["mon","tue","wed","thu","fri"];
 const WEEKEND_COLS = ["sat","sun"];
+
+// ════════════════════════════════════════════
+// 動態補習欄位（週末用）
+// ════════════════════════════════════════════
+function buildDynamicCram(col) {
+  const wrap = document.createElement("div");
+  wrap.id = `${col}_cramWrap`;
+  wrap.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:4px;";
+
+  function addEntry(idx) {
+    const entry = document.createElement("div");
+    entry.style.cssText = "display:flex;flex-direction:column;gap:2px;background:#F0F8FF;border-radius:6px;padding:4px 6px;position:relative;";
+    entry.id = `${col}_cramEntry_${idx}`;
+
+    // 刪除按鈕（第一筆不顯示）
+    if (idx > 0) {
+      const del = document.createElement("button");
+      del.textContent = "✕";
+      del.title = "刪除這筆補習";
+      del.style.cssText = "position:absolute;top:2px;right:2px;border:none;background:transparent;color:#C44;font-size:0.75rem;cursor:pointer;padding:0 3px;";
+      del.onclick = () => { entry.remove(); };
+      entry.appendChild(del);
+    }
+
+    const subjectInp = document.createElement("input");
+    subjectInp.type = "text";
+    subjectInp.className = "t-text";
+    subjectInp.id = `${col}_cramSubject_${idx}`;
+    subjectInp.placeholder = "科目（例：數學）";
+    entry.appendChild(subjectInp);
+
+    const timeWrap = document.createElement("div");
+    timeWrap.style.cssText = "display:flex;align-items:center;gap:4px;";
+    const s = makeTimeSelect(`${col}_cramStart_${idx}`, "range");
+    const sep = document.createElement("span");
+    sep.textContent = "～";
+    sep.style.cssText = "font-size:0.75rem;color:#888;flex-shrink:0;";
+    const e = makeTimeSelect(`${col}_cramEnd_${idx}`, "range");
+    timeWrap.appendChild(s);
+    timeWrap.appendChild(sep);
+    timeWrap.appendChild(e);
+    entry.appendChild(timeWrap);
+
+    wrap.appendChild(entry);
+  }
+
+  addEntry(0); // 預設一筆
+
+  const addBtn = document.createElement("button");
+  addBtn.textContent = "+ 新增一科補習";
+  addBtn.style.cssText = "border:1.5px dashed #5BA4D4;background:transparent;color:#2E6DA4;border-radius:6px;padding:4px 8px;font-size:0.78rem;font-family:inherit;cursor:pointer;margin-top:2px;";
+  addBtn.onclick = () => {
+    const count = wrap.querySelectorAll("[id^='" + col + "_cramEntry_']").length;
+    addEntry(count);
+  };
+  wrap.appendChild(addBtn);
+
+  return wrap;
+}
 
 // ════════════════════════════════════════════
 // Build tables
@@ -737,8 +841,6 @@ function buildTable(rows, cols, tbodyId) {
       tr.appendChild(td);
     } else {
       tr.className = "data-row";
-
-      // Label cell
       const tdLabel = document.createElement("td");
       tdLabel.className = "row-label";
       tdLabel.innerHTML = row.label + (row.sub ? `<span class="row-sublabel">${row.sub}</span>` : "");
@@ -746,15 +848,17 @@ function buildTable(rows, cols, tbodyId) {
 
       cols.forEach(col => {
         const td = document.createElement("td");
-        td.style.textAlign = "center";
+        td.style.cssText = "text-align:center;vertical-align:middle;";
 
-        if (row.type === "time") {
-          const inp = document.createElement("input");
-          inp.type = "time";
-          inp.className = "t-time";
-          inp.id = `${col}_${row.key}`;
-          inp.name = `${col}_${row.key}`;
-          td.appendChild(inp);
+        if (row.type === "timesel") {
+          td.appendChild(makeTimeSelect(`${col}_${row.key}`, row.rangeKey));
+
+        } else if (row.type === "timerange") {
+          td.appendChild(makeTimeRangeCell(col, row.key));
+
+        } else if (row.type === "dynamic_cram") {
+          td.style.textAlign = "left";
+          td.appendChild(buildDynamicCram(col));
 
         } else if (row.type === "check" || row.type === "check+text") {
           const div = document.createElement("div");
@@ -769,14 +873,12 @@ function buildTable(rows, cols, tbodyId) {
             lbl.appendChild(document.createTextNode(" " + opt));
             div.appendChild(lbl);
           });
-          // 若為 check+text，加一個文字輸入欄
           if (row.type === "check+text") {
             const inp = document.createElement("input");
             inp.type = "text";
             inp.className = "t-text";
             inp.style.marginTop = "5px";
             inp.id = `${col}_${row.textKey}`;
-            inp.name = `${col}_${row.textKey}`;
             inp.placeholder = row.ph || "";
             div.appendChild(inp);
           }
@@ -787,7 +889,6 @@ function buildTable(rows, cols, tbodyId) {
           inp.type = "text";
           inp.className = "t-text";
           inp.id = `${col}_${row.key}`;
-          inp.name = `${col}_${row.key}`;
           inp.placeholder = row.ph || "";
           td.appendChild(inp);
         }
@@ -807,7 +908,6 @@ const TOTAL_PAGES = 3;
 
 function goPage(n) {
   if (n > currentPage && !validatePage(currentPage)) return;
-
   document.getElementById("page" + currentPage).classList.remove("active");
   currentPage = n;
   document.getElementById("page" + currentPage).classList.add("active");
@@ -827,33 +927,16 @@ function updateProgress() {
 function validatePage(page) {
   if (page === 1) {
     let ok = true;
-    const checks = [
-      ["f_name",   "e_name"],
-      ["f_county",  "e_county"],
-      ["f_grade",  "e_grade"],
-    ];
-    checks.forEach(([fid, eid]) => {
+    [["f_name","e_name"],["f_county","e_county"],["f_grade","e_grade"]].forEach(([fid, eid]) => {
       const el = document.getElementById(fid);
       const err = document.getElementById(eid);
-      if (!el.value.trim()) {
-        el.classList.add("error");
-        err.classList.add("show");
-        ok = false;
-      } else {
-        el.classList.remove("error");
-        err.classList.remove("show");
-      }
+      if (!el.value.trim()) { el.classList.add("error"); err.classList.add("show"); ok = false; }
+      else { el.classList.remove("error"); err.classList.remove("show"); }
     });
-    if (!ok) showToast("請填寫所有必填欄位（標有 * 的欄位）", "error-t");
-    // 額外驗證學校類型
     const stChecked = document.querySelector('input[name="schoolType"]:checked');
     const stErr = document.getElementById("e_schooltype");
-    if (!stChecked) {
-      stErr.classList.add("show");
-      ok = false;
-    } else {
-      stErr.classList.remove("show");
-    }
+    if (!stChecked) { stErr.classList.add("show"); ok = false; }
+    else { stErr.classList.remove("show"); }
     if (!ok) showToast("請填寫所有必填欄位（標有 * 的欄位）", "error-t");
     return ok;
   }
@@ -866,26 +949,34 @@ function validatePage(page) {
 function collectData() {
   const data = {
     timestamp: new Date().toISOString(),
-    name:   document.getElementById("f_name").value.trim(),
-    county: document.getElementById("f_county").value,
-    schoolType: (document.querySelector('input[name="schoolType"]:checked') || {}).value || "",
-    grade:  document.getElementById("f_grade").value,
-    gender: document.getElementById("f_gender").value,
-    commute: [...document.querySelectorAll(".commute:checked")].map(c => c.value).join("、"),
+    name:      document.getElementById("f_name").value.trim(),
+    county:    document.getElementById("f_county").value,
+    schoolType:(document.querySelector('input[name="schoolType"]:checked') || {}).value || "",
+    grade:     document.getElementById("f_grade").value,
+    gender:    document.getElementById("f_gender").value,
+    commute:   [...document.querySelectorAll(".commute:checked")].map(c => c.value).join("、"),
   };
 
   // Weekdays
   WEEKDAY_COLS.forEach(col => {
     WEEKDAY_ROWS.forEach(row => {
       if (row.type === "section") return;
-      if (row.type === "check" || row.type === "check+text") {
+      if (row.type === "timesel") {
+        const el = document.getElementById(`${col}_${row.key}`);
+        data[`${col}_${row.key}`] = el ? el.value : "";
+      } else if (row.type === "timerange") {
+        const s = document.getElementById(`${col}_${row.key}Start`);
+        const e = document.getElementById(`${col}_${row.key}End`);
+        data[`${col}_${row.key}Start`] = s ? s.value : "";
+        data[`${col}_${row.key}End`]   = e ? e.value : "";
+      } else if (row.type === "check" || row.type === "check+text") {
         const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
         data[`${col}_${row.key}`] = checked.join("、");
         if (row.type === "check+text") {
           const el = document.getElementById(`${col}_${row.textKey}`);
           data[`${col}_${row.textKey}`] = el ? el.value : "";
         }
-      } else {
+      } else if (row.type === "text") {
         const el = document.getElementById(`${col}_${row.key}`);
         data[`${col}_${row.key}`] = el ? el.value : "";
       }
@@ -896,10 +987,34 @@ function collectData() {
   WEEKEND_COLS.forEach(col => {
     WEEKEND_ROWS.forEach(row => {
       if (row.type === "section") return;
-      if (row.type === "check" || row.type === "check+text") {
+      if (row.type === "timesel") {
+        const el = document.getElementById(`${col}_${row.key}`);
+        data[`${col}_${row.key}`] = el ? el.value : "";
+      } else if (row.type === "timerange") {
+        const s = document.getElementById(`${col}_${row.key}Start`);
+        const e = document.getElementById(`${col}_${row.key}End`);
+        data[`${col}_${row.key}Start`] = s ? s.value : "";
+        data[`${col}_${row.key}End`]   = e ? e.value : "";
+      } else if (row.type === "dynamic_cram") {
+        // 收集所有動態補習筆數
+        const entries = document.querySelectorAll(`[id^='${col}_cramEntry_']`);
+        const cramList = [];
+        entries.forEach((entry, i) => {
+          const subj = document.getElementById(`${col}_cramSubject_${i}`);
+          const s    = document.getElementById(`${col}_cramStart_${i}`);
+          const e    = document.getElementById(`${col}_cramEnd_${i}`);
+          const subjVal = subj ? subj.value.trim() : "";
+          const sVal    = s ? s.value : "";
+          const eVal    = e ? e.value : "";
+          if (subjVal || sVal || eVal) {
+            cramList.push(`${subjVal}(${sVal}～${eVal})`);
+          }
+        });
+        data[`${col}_cram`] = cramList.join("；");
+      } else if (row.type === "check" || row.type === "check+text") {
         const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
         data[`${col}_${row.key}`] = checked.join("、");
-      } else {
+      } else if (row.type === "text") {
         const el = document.getElementById(`${col}_${row.key}`);
         data[`${col}_${row.key}`] = el ? el.value : "";
       }
@@ -914,22 +1029,18 @@ function collectData() {
 // ════════════════════════════════════════════
 async function submitForm() {
   if (!validatePage(3)) return;
-
   const data = collectData();
 
-  // If no script URL set, just show success (demo mode)
   if (SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
-    console.log("Demo mode – data that would be sent:", data);
+    console.log("Demo mode – data:", data);
     showThankyou();
     return;
   }
 
   document.getElementById("overlay").classList.add("show");
-
   try {
     await fetch(SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
+      method: "POST", mode: "no-cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
