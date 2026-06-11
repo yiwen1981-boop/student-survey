@@ -687,6 +687,20 @@ function genTimesFrom(startStr, endStr) {
   return opts;
 }
 
+// 總時數選項：30分鐘～8小時，每30分鐘一項，最後加「8小時以上」
+function genDuration() {
+  const opts = ["── 選擇 ──"];
+  for (let m = 30; m <= 480; m += 30) {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    if (h === 0) opts.push(`${min} 分鐘`);
+    else if (min === 0) opts.push(`${h} 小時`);
+    else opts.push(`${h} 小時 ${min} 分鐘`);
+  }
+  opts.push("8 小時以上");
+  return opts;
+}
+
 // 各題目的時間範圍設定
 const TIME_RANGES = {
   wakeup:          genTimesFrom("04:30", "10:00"),  // 起床 04:30～10:00
@@ -702,6 +716,7 @@ const TIME_RANGES = {
   wakeupWeekend:   genTimes(0, 23),                  // 週末起床 全天
   hwGame:          genTimesFrom("15:00", "30:00"),   // 平日寫作業/打電動 15:00～06:00
   sleepWeekday:    genTimesFrom("18:00", "30:00"),   // 平日睡覺 18:00～06:00
+  duration:        genDuration(),                    // 總時數 30分～8小時以上
   range:           genTimes(6, 27),                  // 通用 06:00～03:50
 };
 
@@ -714,7 +729,8 @@ function makeTimeSelect(id, rangeKey) {
   times.forEach(t => {
     const opt = document.createElement("option");
     opt.value = t;
-    opt.textContent = t === "" ? "── 選擇 ──" : t;
+    // duration 陣列第一項是說明文字，其他直接顯示
+    opt.textContent = (t === "" ) ? "── 選擇 ──" : t;
     sel.appendChild(opt);
   });
   return sel;
@@ -746,7 +762,7 @@ const WEEKDAY_ROWS = [
 
   { type: "section", label: "二、在校" },
   { key: "lunch",    label: "午餐", type: "check+text", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"], textKey: "lunchMenu", ph: "營養午餐菜色（選學校午餐者請填）" },
-  { key: "period8",  label: "第八節內容", type: "check", opts: ["考試","上進度","複習","無"] },
+  { key: "period8",  label: "第八節內容", type: "check", opts: ["考試","上進度","複習","自習","無"] },
   { key: "schoolEnd",label: "放學時間",   type: "timesel",   rangeKey: "schoolEnd" },
 
   { type: "section", label: "三、放學後" },
@@ -768,11 +784,11 @@ const WEEKEND_ROWS = [
 
   { type: "section", label: "二、活動" },
   { key: "cram",     label: "補習",        type: "dynamic_cram", rangeKey: "weekendCram" },
-  { key: "club",     label: "才藝班/社團", type: "timerange",    rangeKey: "weekendCram" },
+  { key: "club",     label: "才藝班/社團", type: "duration",     rangeKey: "duration" },
   { key: "work",     label: "打工",        type: "timerange",    rangeKey: "allDay" },
   { key: "workType", label: "打工內容",    type: "text", ph: "例：超商，若無留空" },
-  { key: "hw",       label: "寫作業",       type: "timerange",   rangeKey: "allDay" },
-  { key: "game",     label: "打電動/上社群", type: "timerange",  rangeKey: "allDay" },
+  { key: "hw",       label: "寫作業/唸書準備考試", type: "duration", rangeKey: "duration" },
+  { key: "game",     label: "打電動/上社群", type: "duration",   rangeKey: "duration" },
   { key: "gameName", label: "遊戲/社群名稱", type: "merged-text", ph: "例：IG、Minecraft（週末填一次）" },
   { key: "leisure",  label: "其他休閒活動",  type: "text", ph: "例：看書、運動" },
   { key: "sleep",    label: "睡覺時間",     type: "timesel",     rangeKey: "sleep" },
@@ -883,8 +899,10 @@ function buildTable(rows, cols, tbodyId) {
         const td = document.createElement("td");
         td.style.cssText = "text-align:center;vertical-align:middle;";
 
-        if (row.type === "timesel") {
-          td.appendChild(makeTimeSelect(`${col}_${row.key}`, row.rangeKey));
+        if (row.type === "timesel" || row.type === "duration") {
+          const rKey = row.type === "duration" ? "duration" : row.rangeKey;
+          const sel = makeTimeSelect(`${col}_${row.key}`, rKey);
+          td.appendChild(sel);
 
         } else if (row.type === "timerange" || row.type === "timerange+check") {
           const wrap = makeTimeRangeCell(col, row.key, row.rangeKey || "range");
@@ -1047,7 +1065,7 @@ function collectData() {
   WEEKEND_COLS.forEach(col => {
     WEEKEND_ROWS.forEach(row => {
       if (row.type === "section") return;
-      if (row.type === "timesel") {
+      if (row.type === "timesel" || row.type === "duration") {
         const el = document.getElementById(`${col}_${row.key}`);
         data[`${col}_${row.key}`] = el ? el.value : "";
       } else if (row.type === "timerange") {
