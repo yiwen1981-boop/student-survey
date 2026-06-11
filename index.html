@@ -720,6 +720,18 @@
       補習請點「＋ 新增一科補習」依科目分開填寫開始與結束時間。<br>
       📌 除補習外，其他活動（才藝班/社團、寫作業/唸書、打電動/上社群）請以<strong>當天總時數</strong>填寫，例如：共花了 2 小時，請選「2 小時」。
     </div>
+
+    <!-- 手機版：星期切換列 -->
+    <div class="day-switcher" id="weekendSwitcher">
+      <button class="day-nav" id="weekendPrev" onclick="switchWeekendDay(-1)">&#8592;</button>
+      <span class="day-label" id="weekendLabel">星期六</span>
+      <button class="day-nav" id="weekendNext" onclick="switchWeekendDay(1)">&#8594;</button>
+    </div>
+    <div class="day-dots" id="weekendDots">
+      <span class="dot active" data-w="0"></span>
+      <span class="dot" data-w="1"></span>
+    </div>
+
     <div class="card">
       <div class="card-header"><span class="icon">🌤</span> 週末作息表</div>
       <div class="card-body" style="padding:0">
@@ -735,6 +747,7 @@
             <tbody id="weekendBody"></tbody>
           </table>
         </div>
+        <div class="mobile-day-card" id="mobileWeekendCard"></div>
       </div>
     </div>
     <div class="btn-row">
@@ -1572,16 +1585,146 @@ function restoreDraftToMobile() {
   } catch(e) {}
 }
 
-// 視窗大小改變時切換模式
+const WEEKEND_NAMES = ["星期六","星期日"];
+const WEEKEND_KEYS  = ["sat","sun"];
+let currentWeekendIndex = 0;
+
+function buildMobileWeekendCard(dayIdx) {
+  const col = WEEKEND_KEYS[dayIdx];
+  const card = document.getElementById("mobileWeekendCard");
+  card.innerHTML = "";
+
+  WEEKEND_ROWS.forEach(row => {
+    if (row.type === "section") {
+      const hdr = document.createElement("div");
+      hdr.className = "mobile-section-header";
+      hdr.textContent = row.label;
+      card.appendChild(hdr);
+      return;
+    }
+    if (row.type === "merged-text") {
+      if (dayIdx !== 0) return;
+      const div = document.createElement("div");
+      div.className = "mobile-row";
+      const lbl = document.createElement("div");
+      lbl.className = "mobile-row-label";
+      lbl.textContent = row.label;
+      const inp_wrap = document.createElement("div");
+      inp_wrap.className = "mobile-row-input";
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.className = "t-text";
+      inp.id = `merged_${row.key}`;
+      inp.placeholder = (row.ph || "") + "（週末填一次）";
+      inp.style.maxWidth = "100%";
+      inp_wrap.appendChild(inp);
+      div.appendChild(lbl); div.appendChild(inp_wrap);
+      card.appendChild(div);
+      return;
+    }
+
+    const div = document.createElement("div");
+    div.className = "mobile-row";
+    const lbl = document.createElement("div");
+    lbl.className = "mobile-row-label";
+    lbl.innerHTML = row.label + (row.sub ? `<span class="row-sublabel">${row.sub}</span>` : "");
+    div.appendChild(lbl);
+
+    const inp_wrap = document.createElement("div");
+    inp_wrap.className = "mobile-row-input";
+
+    if (row.type === "timesel" || row.type === "duration") {
+      const rKey = row.type === "duration" ? "duration" : row.rangeKey;
+      inp_wrap.appendChild(makeTimeSelect(`${col}_${row.key}`, rKey));
+
+    } else if (row.type === "timerange") {
+      inp_wrap.appendChild(makeTimeRangeCell(col, row.key, row.rangeKey || "range"));
+
+    } else if (row.type === "dynamic_cram") {
+      const wrap = buildDynamicCram(col);
+      wrap.style.width = "100%";
+      inp_wrap.appendChild(wrap);
+
+    } else if (row.type === "check" || row.type === "check+text") {
+      const grp = document.createElement("div");
+      grp.className = "check-group";
+      grp.style.alignItems = "flex-end";
+      row.opts.forEach(opt => {
+        const l = document.createElement("label");
+        const i = document.createElement("input");
+        i.type = "checkbox"; i.value = opt;
+        i.className = `cb_${col}_${row.key}`;
+        i.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
+        l.appendChild(i); l.appendChild(document.createTextNode(" " + opt));
+        grp.appendChild(l);
+      });
+      inp_wrap.appendChild(grp);
+
+    } else if (row.type === "text") {
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.className = "t-text";
+      inp.id = `${col}_${row.key}`; inp.placeholder = row.ph || "";
+      inp_wrap.appendChild(inp);
+    }
+
+    div.appendChild(inp_wrap);
+    card.appendChild(div);
+  });
+
+  // 還原已儲存值
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    document.querySelectorAll("#mobileWeekendCard select").forEach(el => {
+      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
+    });
+    document.querySelectorAll("#mobileWeekendCard input[type=text]").forEach(el => {
+      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
+    });
+    document.querySelectorAll("#mobileWeekendCard input[type=checkbox]").forEach(cb => {
+      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
+      if (draft[key] !== undefined) cb.checked = draft[key];
+    });
+  } catch(e) {}
+}
+
+function switchWeekendDay(dir) {
+  currentWeekendIndex = Math.max(0, Math.min(1, currentWeekendIndex + dir));
+  updateWeekendSwitcher();
+}
+
+function updateWeekendSwitcher() {
+  if (!isMobile()) return;
+  document.getElementById("weekendLabel").textContent = WEEKEND_NAMES[currentWeekendIndex];
+  document.getElementById("weekendPrev").disabled = currentWeekendIndex === 0;
+  document.getElementById("weekendNext").disabled = currentWeekendIndex === 1;
+  document.querySelectorAll("#weekendDots .dot").forEach((d, i) => {
+    d.classList.toggle("active", i === currentWeekendIndex);
+  });
+  buildMobileWeekendCard(currentWeekendIndex);
+}
+
+// 週末進度點點擊
 window.addEventListener("resize", () => {
-  if (isMobile()) updateDaySwitcher();
+  if (isMobile()) { updateDaySwitcher(); updateWeekendSwitcher(); }
 });
 buildTable(WEEKDAY_ROWS, WEEKDAY_COLS, "weekdayBody");
 buildTable(WEEKEND_ROWS, WEEKEND_COLS, "weekendBody");
 updateProgress();
 
 // 手機版初始化
-if (isMobile()) updateDaySwitcher();
+if (isMobile()) {
+  updateDaySwitcher();
+  updateWeekendSwitcher();
+}
+
+// 進度點點擊
+document.querySelectorAll("#dayDots .dot").forEach(d => {
+  d.addEventListener("click", () => { currentDayIndex = parseInt(d.dataset.d); updateDaySwitcher(); });
+});
+document.querySelectorAll("#weekendDots .dot").forEach(d => {
+  d.addEventListener("click", () => { currentWeekendIndex = parseInt(d.dataset.w); updateWeekendSwitcher(); });
+});
 
 // 檢查是否已填過
 if (checkAlreadySubmitted()) {
