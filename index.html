@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -664,7 +665,7 @@ function genTimes(startH, endH) {
   const opts = [""];
   for (let h = startH; h <= endH; h++) {
     const hh = (h % 24).toString().padStart(2, "0");
-    ["00","15","30","45"].forEach(mm => {
+    ["00","10","20","30","40","50"].forEach(mm => {
       opts.push(`${hh}:${mm}`);
     });
   }
@@ -754,7 +755,6 @@ const WEEKEND_ROWS = [
   { key: "work",     label: "打工",        type: "timerange" },
   { key: "workType", label: "打工內容",    type: "text", ph: "例：超商，若無留空" },
 
-  { type: "section", label: "四、晚間" },
   { key: "hw",       label: "寫作業",       type: "timerange" },
   { key: "game",     label: "打電動/上社群", type: "timerange" },
   { key: "gameName", label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
