@@ -465,10 +465,9 @@
   ══════════════════════════════════ -->
   <div class="page active" id="page1">
     <div class="info-card">
-      親愛的同學，你好！<br>
-      這份問卷希望了解你一週的生活作息，包括睡眠、補習、休閒等時間分配。<br>
-      請根據<strong>上週的實際情況</strong>填寫，不需要填「理想中」的狀況。全部填完約需 5–8 分鐘。<br>
-      資料僅供研究統計使用，不會對外公開，謝謝你的配合！
+      國家人權委員會為瞭解學生休息休閒等發展權利的情形，希望邀請您填寫一週作息。包括睡眠、補習、休閒等時間分配。<br>
+      請根據<strong>上週的實際情況</strong>填寫，不需要填寫「理想中」的狀況。全部填完約 5–8 分鐘。<br>
+      資料僅供研究統計使用，不會對外公開，謝謝您的幫忙！
     </div>
 
     <div class="card">
@@ -601,8 +600,8 @@
   <div class="page" id="page3">
     <div class="page-note">
       🏖 <strong>週末作息（星期六、日）</strong><br>
-      填法與平日相同。補習可點「＋ 新增一科補習」依科目分開填寫。<br>
-      睡覺時間若跨日（凌晨），下拉選單中已含 00:00～03:45 可直接選取。
+      補習請點「＋ 新增一科補習」依科目分開填寫開始與結束時間。<br>
+      📌 除補習外，其他活動（才藝班/社團、寫作業/唸書、打電動/上社群）請以<strong>當天總時數</strong>填寫，例如：共花了 2 小時，請選「2 小時」。
     </div>
     <div class="card">
       <div class="card-header"><span class="icon">🌤</span> 週末作息表</div>
@@ -634,8 +633,22 @@
     <div class="card">
       <div class="thankyou">
         <div class="big-icon">🎉</div>
-        <h2>感謝你的填寫！</h2>
-        <p>你的作息資料已成功送出。<br>問卷資料僅供研究統計，不會對外公開，謝謝你！</p>
+        <h2>感謝您的填寫！</h2>
+        <p>您的作息資料已成功送出。<br>問卷資料僅供研究統計，不會對外公開，謝謝您的幫忙！</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       PAGE 5：已填寫過
+  ══════════════════════════════════ -->
+  <div class="page" id="page5">
+    <div class="card">
+      <div class="thankyou">
+        <div class="big-icon">✅</div>
+        <h2>您已完成填寫</h2>
+        <p>我們已收到您的問卷，請勿重複送出。<br>感謝您協助國家人權委員會的研究！</p>
+        <p style="margin-top:16px;font-size:0.82rem;color:#AAA;">如果您認為這是錯誤，請聯絡研究人員重置。</p>
       </div>
     </div>
   </div>
@@ -766,7 +779,7 @@ const WEEKDAY_ROWS = [
   { key: "schoolEnd",label: "放學時間",   type: "timesel",   rangeKey: "schoolEnd" },
 
   { type: "section", label: "三、放學後" },
-  { key: "cram",     label: "補習",         type: "timerange+check", rangeKey: "cram",            noOpt: "無" },
+  { key: "cram",     label: "補習",         type: "timerange+check", rangeKey: "cram" },
   { key: "study",    label: "課輔/留校自習", type: "timerange",       rangeKey: "schoolAfternoon" },
   { key: "club",     label: "才藝班/社團",  type: "timerange",       rangeKey: "schoolAfternoon" },
   { key: "work",     label: "打工",         type: "timerange",       rangeKey: "afternoon" },
@@ -1135,6 +1148,8 @@ async function submitForm() {
 }
 
 function showThankyou() {
+  lockSubmitted();
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   document.getElementById("page" + currentPage).classList.remove("active");
   document.getElementById("page4").classList.add("active");
   document.getElementById("progressFill").style.width = "100%";
@@ -1155,11 +1170,111 @@ function showToast(msg, type = "") {
 }
 
 // ════════════════════════════════════════════
+// localStorage 暫存 & 重複填寫鎖定
+// ════════════════════════════════════════════
+const STORAGE_KEY   = "nhrsurvey_draft";
+const SUBMITTED_KEY = "nhrsurvey_submitted";
+
+// 收集所有表單欄位值存入 localStorage
+function saveDraft() {
+  try {
+    const draft = {};
+    // 基本資料
+    ["f_name","f_county","f_grade","f_gender"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) draft[id] = el.value;
+    });
+    document.querySelectorAll(".commute").forEach(cb => {
+      draft["commute_" + cb.value] = cb.checked;
+    });
+    draft["schoolType"] = (document.querySelector('input[name="schoolType"]:checked') || {}).value || "";
+
+    // 所有 select / input[type=text] / input[type=time]
+    document.querySelectorAll("select, input[type=text], input[type=time]").forEach(el => {
+      if (el.id) draft[el.id] = el.value;
+    });
+    // checkboxes（補習「無」及其他）
+    document.querySelectorAll("input[type=checkbox]").forEach(cb => {
+      if (cb.className) draft["cb__" + cb.className + "__" + cb.value] = cb.checked;
+    });
+    draft["_page"] = currentPage;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  } catch(e) {}
+}
+
+// 從 localStorage 還原
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+
+    ["f_name","f_county","f_grade","f_gender"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && draft[id] !== undefined) el.value = draft[id];
+    });
+    document.querySelectorAll(".commute").forEach(cb => {
+      if (draft["commute_" + cb.value] !== undefined) cb.checked = draft["commute_" + cb.value];
+    });
+    if (draft["schoolType"]) {
+      const rb = document.querySelector(`input[name="schoolType"][value="${draft["schoolType"]}"]`);
+      if (rb) rb.checked = true;
+    }
+
+    document.querySelectorAll("select, input[type=text], input[type=time]").forEach(el => {
+      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
+    });
+    document.querySelectorAll("input[type=checkbox]").forEach(cb => {
+      const key = "cb__" + cb.className + "__" + cb.value;
+      if (draft[key] !== undefined) cb.checked = draft[key];
+    });
+
+    // 還原到上次所在頁
+    if (draft["_page"] && draft["_page"] > 1) {
+      currentPage = draft["_page"];
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById("page" + currentPage).classList.add("active");
+      updateProgress();
+      showToast("已為您還原上次填寫的進度 📋");
+    }
+  } catch(e) {}
+}
+
+// 自動儲存：每次有輸入就存
+function setupAutosave() {
+  document.addEventListener("change", saveDraft);
+  document.addEventListener("input",  saveDraft);
+}
+
+// 送出後鎖定
+function lockSubmitted() {
+  try { localStorage.setItem(SUBMITTED_KEY, "1"); } catch(e) {}
+}
+
+// 檢查是否已送出
+function checkAlreadySubmitted() {
+  try {
+    return localStorage.getItem(SUBMITTED_KEY) === "1";
+  } catch(e) { return false; }
+}
+
+// ════════════════════════════════════════════
 // Init
 // ════════════════════════════════════════════
 buildTable(WEEKDAY_ROWS, WEEKDAY_COLS, "weekdayBody");
 buildTable(WEEKEND_ROWS, WEEKEND_COLS, "weekendBody");
 updateProgress();
+
+// 檢查是否已填過
+if (checkAlreadySubmitted()) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page5").classList.add("active");
+  document.getElementById("progressFill").style.width = "100%";
+  document.getElementById("progressLabel").textContent = "已完成";
+} else {
+  restoreDraft();
+  setupAutosave();
+}
 </script>
 </body>
 </html>
