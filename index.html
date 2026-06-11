@@ -465,7 +465,7 @@
   ══════════════════════════════════ -->
   <div class="page active" id="page1">
     <div class="info-card">
-      國家人權委員會為瞭解學生休息休閒等發展權利的情形，希望邀請您填寫一週作息。包括睡眠、補習、休閒等時間分配。<br>
+      國家人權委員會為了解學生休息休閒等發展權利的情形，希望邀請您填寫一週作息。包括睡眠、補習、休閒等時間分配。<br>
       請根據<strong>上週的實際情況</strong>填寫，不需要填寫「理想中」的狀況。全部填完約 5–8 分鐘。<br>
       資料僅供研究統計使用，不會對外公開，謝謝您的幫忙！
     </div>
@@ -1172,13 +1172,17 @@ function showToast(msg, type = "") {
 // ════════════════════════════════════════════
 // localStorage 暫存 & 重複填寫鎖定
 // ════════════════════════════════════════════
-const STORAGE_KEY   = "nhrsurvey_draft";
-const SUBMITTED_KEY = "nhrsurvey_submitted";
+const STORAGE_KEY   = "nhrsurvey_draft_v2";
+const SUBMITTED_KEY = "nhrsurvey_done_v2";
 
 // 收集所有表單欄位值存入 localStorage
 function saveDraft() {
+  // 絕對不能在這裡碰 SUBMITTED_KEY
+  if (checkAlreadySubmitted()) return;
   try {
     const draft = {};
+    draft["_page"] = currentPage;
+
     // 基本資料
     ["f_name","f_county","f_grade","f_gender"].forEach(id => {
       const el = document.getElementById(id);
@@ -1189,15 +1193,20 @@ function saveDraft() {
     });
     draft["schoolType"] = (document.querySelector('input[name="schoolType"]:checked') || {}).value || "";
 
-    // 所有 select / input[type=text] / input[type=time]
-    document.querySelectorAll("select, input[type=text], input[type=time]").forEach(el => {
+    // 所有 select（排除 page4/page5）
+    document.querySelectorAll("#page1 select, #page2 select, #page3 select").forEach(el => {
       if (el.id) draft[el.id] = el.value;
     });
-    // checkboxes（補習「無」及其他）
-    document.querySelectorAll("input[type=checkbox]").forEach(cb => {
-      if (cb.className) draft["cb__" + cb.className + "__" + cb.value] = cb.checked;
+    // 所有 text input（排除 page4/page5）
+    document.querySelectorAll("#page1 input[type=text], #page2 input[type=text], #page3 input[type=text]").forEach(el => {
+      if (el.id) draft[el.id] = el.value;
     });
-    draft["_page"] = currentPage;
+    // checkboxes（排除 page4/page5）
+    document.querySelectorAll("#page1 input[type=checkbox], #page2 input[type=checkbox], #page3 input[type=checkbox]").forEach(cb => {
+      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
+      draft[key] = cb.checked;
+    });
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   } catch(e) {}
 }
@@ -1220,12 +1229,14 @@ function restoreDraft() {
       const rb = document.querySelector(`input[name="schoolType"][value="${draft["schoolType"]}"]`);
       if (rb) rb.checked = true;
     }
-
-    document.querySelectorAll("select, input[type=text], input[type=time]").forEach(el => {
+    document.querySelectorAll("#page1 select, #page2 select, #page3 select").forEach(el => {
       if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
     });
-    document.querySelectorAll("input[type=checkbox]").forEach(cb => {
-      const key = "cb__" + cb.className + "__" + cb.value;
+    document.querySelectorAll("#page1 input[type=text], #page2 input[type=text], #page3 input[type=text]").forEach(el => {
+      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
+    });
+    document.querySelectorAll("#page1 input[type=checkbox], #page2 input[type=checkbox], #page3 input[type=checkbox]").forEach(cb => {
+      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
       if (draft[key] !== undefined) cb.checked = draft[key];
     });
 
@@ -1240,22 +1251,25 @@ function restoreDraft() {
   } catch(e) {}
 }
 
-// 自動儲存：每次有輸入就存
+// 自動儲存（使用者主動互動才觸發，避免建表時誤觸）
 function setupAutosave() {
-  document.addEventListener("change", saveDraft);
-  document.addEventListener("input",  saveDraft);
+  ["page1","page2","page3"].forEach(pid => {
+    const pg = document.getElementById(pid);
+    if (pg) {
+      pg.addEventListener("change", saveDraft);
+      pg.addEventListener("input",  saveDraft);
+    }
+  });
 }
 
-// 送出後鎖定
+// 送出後鎖定（唯一寫入 SUBMITTED_KEY 的地方）
 function lockSubmitted() {
   try { localStorage.setItem(SUBMITTED_KEY, "1"); } catch(e) {}
 }
 
 // 檢查是否已送出
 function checkAlreadySubmitted() {
-  try {
-    return localStorage.getItem(SUBMITTED_KEY) === "1";
-  } catch(e) { return false; }
+  try { return localStorage.getItem(SUBMITTED_KEY) === "1"; } catch(e) { return false; }
 }
 
 // ════════════════════════════════════════════
