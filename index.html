@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -524,9 +525,9 @@
             <label>年級 <span class="req">*</span></label>
             <select id="f_grade">
               <option value="">── 請選擇 ──</option>
-              <option>國中一年級</option>
-              <option>國中二年級</option>
-              <option>國中三年級</option>
+              <option>7年級（國一）</option>
+              <option>8年級（國二）</option>
+              <option>9年級（國三）</option>
               <option>高中一年級</option>
               <option>高中二年級</option>
               <option>高中三年級</option>
@@ -688,15 +689,18 @@ function genTimesFrom(startStr, endStr) {
 
 // 各題目的時間範圍設定
 const TIME_RANGES = {
-  wakeup:        genTimesFrom("04:30", "10:00"),  // 起床 04:30～10:00
-  leave:         genTimes(5, 10),                  // 出門 05:00～10:50
-  arrive:        genTimesFrom("06:30", "12:00"),   // 到校 06:30～12:00
-  schoolEnd:     genTimesFrom("15:00", "22:00"),   // 放學 15:00～22:00
-  sleep:         genTimes(20, 27),                  // 睡覺 20:00～03:50（跨日）
-  cram:          genTimesFrom("15:30", "22:00"),   // 補習 15:30～22:00
-  afternoon:     genTimesFrom("15:30", "30:00"),   // 放學後活動 15:30～06:00（跨日）
-  wakeupWeekend: genTimes(0, 23),                  // 週末起床 00:00～23:50（全天）
-  range:         genTimes(6, 27),                   // 通用 06:00～03:50
+  wakeup:          genTimesFrom("04:30", "10:00"),  // 起床 04:30～10:00
+  leave:           genTimes(5, 10),                  // 出門 05:00～10:50
+  arrive:          genTimesFrom("06:30", "12:00"),   // 到校 06:30～12:00
+  schoolEnd:       genTimesFrom("15:00", "22:00"),   // 放學 15:00～22:00
+  sleep:           genTimes(0, 23),                  // 睡覺 全天 00:00～23:50
+  cram:            genTimesFrom("15:30", "22:00"),   // 平日補習 15:30～22:00
+  schoolAfternoon: genTimesFrom("15:00", "22:00"),   // 留校/課輔/才藝 15:00～22:00
+  afternoon:       genTimesFrom("15:30", "30:00"),   // 打工 15:30～06:00（跨日）
+  weekendCram:     genTimesFrom("08:00", "22:00"),   // 週末補習/才藝 08:00～22:00
+  allDay:          genTimes(0, 23),                  // 寫作業/打電動/睡覺 全天
+  wakeupWeekend:   genTimes(0, 23),                  // 週末起床 全天
+  range:           genTimes(6, 27),                  // 通用 06:00～03:50
 };
 
 function makeTimeSelect(id, rangeKey) {
@@ -744,13 +748,13 @@ const WEEKDAY_ROWS = [
   { key: "schoolEnd",label: "放學時間",   type: "timesel",   rangeKey: "schoolEnd" },
 
   { type: "section", label: "三、放學後" },
-  { key: "cram",     label: "補習",         type: "timerange+check", rangeKey: "cram",      noOpt: "無" },
-  { key: "study",    label: "課輔/留校自習", type: "timerange",       rangeKey: "afternoon" },
-  { key: "club",     label: "才藝班/社團",  type: "timerange",       rangeKey: "afternoon" },
+  { key: "cram",     label: "補習",         type: "timerange+check", rangeKey: "cram",            noOpt: "無" },
+  { key: "study",    label: "課輔/留校自習", type: "timerange",       rangeKey: "schoolAfternoon" },
+  { key: "club",     label: "才藝班/社團",  type: "timerange",       rangeKey: "schoolAfternoon" },
   { key: "work",     label: "打工",         type: "timerange",       rangeKey: "afternoon" },
   { key: "workType", label: "打工內容",     type: "text", ph: "例：超商，若無留空" },
-  { key: "hw",       label: "寫作業",       type: "timerange",       rangeKey: "afternoon" },
-  { key: "game",     label: "打電動/上社群", type: "timerange",       rangeKey: "afternoon" },
+  { key: "hw",       label: "寫作業",       type: "timerange",       rangeKey: "allDay" },
+  { key: "game",     label: "打電動/上社群", type: "timerange",       rangeKey: "allDay" },
   { key: "gameName", label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
   { key: "leisure",  label: "其他休閒活動", type: "text", ph: "例：看書、運動" },
   { key: "sleep",    label: "睡覺時間",     type: "timesel",   rangeKey: "sleep" },
@@ -760,20 +764,16 @@ const WEEKEND_ROWS = [
   { type: "section", label: "一、早晨" },
   { key: "wakeup",   label: "起床時間",  type: "timesel", rangeKey: "wakeupWeekend" },
 
-  { type: "section", label: "二、用餐" },
-  { key: "lunch",    label: "午餐", type: "check", opts: ["自煮","家人準備","外食/叫外送","不吃"] },
-
-  { type: "section", label: "三、活動" },
-  { key: "cram",     label: "補習",        type: "dynamic_cram" },
-  { key: "club",     label: "才藝班/社團", type: "timerange" },
-  { key: "work",     label: "打工",        type: "timerange" },
+  { type: "section", label: "二、活動" },
+  { key: "cram",     label: "補習",        type: "dynamic_cram", rangeKey: "weekendCram" },
+  { key: "club",     label: "才藝班/社團", type: "timerange",    rangeKey: "weekendCram" },
+  { key: "work",     label: "打工",        type: "timerange",    rangeKey: "allDay" },
   { key: "workType", label: "打工內容",    type: "text", ph: "例：超商，若無留空" },
-
-  { key: "hw",       label: "寫作業",       type: "timerange" },
-  { key: "game",     label: "打電動/上社群", type: "timerange" },
+  { key: "hw",       label: "寫作業",       type: "timerange",   rangeKey: "allDay" },
+  { key: "game",     label: "打電動/上社群", type: "timerange",  rangeKey: "allDay" },
   { key: "gameName", label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
   { key: "leisure",  label: "其他休閒活動",  type: "text", ph: "例：看書、運動" },
-  { key: "sleep",    label: "睡覺時間",     type: "timesel", rangeKey: "sleep" },
+  { key: "sleep",    label: "睡覺時間",     type: "timesel",     rangeKey: "sleep" },
 ];
 
 const WEEKDAY_COLS = ["mon","tue","wed","thu","fri"];
@@ -811,11 +811,11 @@ function buildDynamicCram(col) {
 
     const timeWrap = document.createElement("div");
     timeWrap.style.cssText = "display:flex;align-items:center;gap:4px;";
-    const s = makeTimeSelect(`${col}_cramStart_${idx}`, "range");
+    const s = makeTimeSelect(`${col}_cramStart_${idx}`, "weekendCram");
     const sep = document.createElement("span");
     sep.textContent = "～";
     sep.style.cssText = "font-size:0.75rem;color:#888;flex-shrink:0;";
-    const e = makeTimeSelect(`${col}_cramEnd_${idx}`, "range");
+    const e = makeTimeSelect(`${col}_cramEnd_${idx}`, "weekendCram");
     timeWrap.appendChild(s);
     timeWrap.appendChild(sep);
     timeWrap.appendChild(e);
