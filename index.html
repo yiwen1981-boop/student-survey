@@ -465,7 +465,7 @@
   <div class="page active" id="page1">
     <div class="info-card">
       親愛的同學，你好！<br>
-      這份問卷希望瞭解兒少休息休閒及發展權利的實際情形，因此想請您填寫一週的生活作息，包括睡眠、補習、休閒等時間分配。<br>
+      這份問卷希望了解你一週的生活作息，包括睡眠、補習、休閒等時間分配。<br>
       請根據<strong>上週的實際情況</strong>填寫，不需要填「理想中」的狀況。全部填完約需 5–8 分鐘。<br>
       資料僅供研究統計使用，不會對外公開，謝謝你的配合！
     </div>
@@ -524,9 +524,9 @@
             <label>年級 <span class="req">*</span></label>
             <select id="f_grade">
               <option value="">── 請選擇 ──</option>
-              <option>國中七年級</option>
-              <option>國中八年級</option>
-              <option>國中九年級</option>
+              <option>國中一年級</option>
+              <option>國中二年級</option>
+              <option>國中三年級</option>
               <option>高中一年級</option>
               <option>高中二年級</option>
               <option>高中三年級</option>
@@ -671,15 +671,32 @@ function genTimes(startH, endH) {
   return opts;
 }
 
+// 支援非整點起始/結束（格式 "HH:MM"，endH 可為 "30:00" 代表跨日06:00）
+function genTimesFrom(startStr, endStr) {
+  const opts = [""];
+  const [sh, sm] = startStr.split(":").map(Number);
+  const [eh, em] = endStr.split(":").map(Number);
+  const startMin = sh * 60 + sm;
+  const endMin   = eh * 60 + em;
+  for (let m = startMin; m <= endMin; m += 10) {
+    const hh = (Math.floor(m / 60) % 24).toString().padStart(2, "0");
+    const mm = (m % 60).toString().padStart(2, "0");
+    opts.push(`${hh}:${mm}`);
+  }
+  return opts;
+}
+
 // 各題目的時間範圍設定
 const TIME_RANGES = {
-  wakeup:     genTimes(4, 11),   // 起床 04:00～11:45
-  leave:      genTimes(5, 10),   // 出門 05:00～10:45
-  arrive:     genTimes(6, 11),   // 到校 06:00～11:45
-  schoolEnd:  genTimes(14, 21),  // 放學 14:00～21:45
-  sleep:      genTimes(20, 27),  // 睡覺 20:00～03:45（跨日）
-  // 時間區間（開始/結束）使用同一個全天範圍
-  range:      genTimes(6, 27),   // 06:00～03:45（跨日）
+  wakeup:        genTimesFrom("04:30", "10:00"),  // 起床 04:30～10:00
+  leave:         genTimes(5, 10),                  // 出門 05:00～10:50
+  arrive:        genTimesFrom("06:30", "12:00"),   // 到校 06:30～12:00
+  schoolEnd:     genTimesFrom("15:00", "22:00"),   // 放學 15:00～22:00
+  sleep:         genTimes(20, 27),                  // 睡覺 20:00～03:50（跨日）
+  cram:          genTimesFrom("15:30", "22:00"),   // 補習 15:30～22:00
+  afternoon:     genTimesFrom("15:30", "30:00"),   // 放學後活動 15:30～06:00（跨日）
+  wakeupWeekend: genTimes(0, 23),                  // 週末起床 00:00～23:50（全天）
+  range:         genTimes(6, 27),                   // 通用 06:00～03:50
 };
 
 function makeTimeSelect(id, rangeKey) {
@@ -697,14 +714,14 @@ function makeTimeSelect(id, rangeKey) {
   return sel;
 }
 
-function makeTimeRangeCell(col, key) {
+function makeTimeRangeCell(col, key, rangeKey = "range") {
   const wrap = document.createElement("div");
   wrap.style.cssText = "display:flex;flex-direction:column;gap:3px;align-items:center;";
-  const s = makeTimeSelect(`${col}_${key}Start`, "range");
+  const s = makeTimeSelect(`${col}_${key}Start`, rangeKey);
   const sep = document.createElement("span");
   sep.textContent = "↓";
   sep.style.cssText = "font-size:0.7rem;color:#9AA;";
-  const e = makeTimeSelect(`${col}_${key}End`, "range");
+  const e = makeTimeSelect(`${col}_${key}End`, rangeKey);
   wrap.appendChild(s);
   wrap.appendChild(sep);
   wrap.appendChild(e);
@@ -716,34 +733,32 @@ function makeTimeRangeCell(col, key) {
 // ════════════════════════════════════════════
 const WEEKDAY_ROWS = [
   { type: "section", label: "一、早晨" },
-  { key: "wakeup",      label: "起床時間",   type: "timesel", rangeKey: "wakeup" },
-  { key: "leave",       label: "出門時間",   type: "timesel", rangeKey: "leave" },
-  { key: "arrive",      label: "到校時間",   type: "timesel", rangeKey: "arrive" },
+  { key: "wakeup",      label: "起床時間",   type: "timesel",   rangeKey: "wakeup" },
+  { key: "leave",       label: "出門時間",   type: "timesel",   rangeKey: "leave" },
+  { key: "arrive",      label: "到校時間",   type: "timesel",   rangeKey: "arrive" },
   { key: "morningExam", label: "早自習", sub: "考試科目（無則留空）", type: "text", ph: "科目名稱" },
 
   { type: "section", label: "二、在校" },
   { key: "lunch",    label: "午餐", type: "check+text", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"], textKey: "lunchMenu", ph: "營養午餐菜色（選學校午餐者請填）" },
   { key: "period8",  label: "第八節內容", type: "check", opts: ["考試","上進度","複習","無"] },
-  { key: "schoolEnd",label: "放學時間",   type: "timesel", rangeKey: "schoolEnd" },
+  { key: "schoolEnd",label: "放學時間",   type: "timesel",   rangeKey: "schoolEnd" },
 
   { type: "section", label: "三、放學後" },
-  { key: "cram",     label: "補習",         type: "timerange" },
-  { key: "study",    label: "課輔/留校自習", type: "timerange" },
-  { key: "club",     label: "才藝班/社團",  type: "timerange" },
-  { key: "work",     label: "打工",         type: "timerange" },
+  { key: "cram",     label: "補習",         type: "timerange+check", rangeKey: "cram",      noOpt: "無" },
+  { key: "study",    label: "課輔/留校自習", type: "timerange",       rangeKey: "afternoon" },
+  { key: "club",     label: "才藝班/社團",  type: "timerange",       rangeKey: "afternoon" },
+  { key: "work",     label: "打工",         type: "timerange",       rangeKey: "afternoon" },
   { key: "workType", label: "打工內容",     type: "text", ph: "例：超商，若無留空" },
-
-  { type: "section", label: "四、晚間" },
-  { key: "hw",       label: "寫作業",       type: "timerange" },
-  { key: "game",     label: "打電動/上社群", type: "timerange" },
+  { key: "hw",       label: "寫作業",       type: "timerange",       rangeKey: "afternoon" },
+  { key: "game",     label: "打電動/上社群", type: "timerange",       rangeKey: "afternoon" },
   { key: "gameName", label: "遊戲/社群名稱", type: "text", ph: "例：IG、Minecraft" },
   { key: "leisure",  label: "其他休閒活動", type: "text", ph: "例：看書、運動" },
-  { key: "sleep",    label: "睡覺時間",     type: "timesel", rangeKey: "sleep" },
+  { key: "sleep",    label: "睡覺時間",     type: "timesel",   rangeKey: "sleep" },
 ];
 
 const WEEKEND_ROWS = [
   { type: "section", label: "一、早晨" },
-  { key: "wakeup",   label: "起床時間",  type: "timesel", rangeKey: "wakeup" },
+  { key: "wakeup",   label: "起床時間",  type: "timesel", rangeKey: "wakeupWeekend" },
 
   { type: "section", label: "二、用餐" },
   { key: "lunch",    label: "午餐", type: "check", opts: ["自煮","家人準備","外食/叫外送","不吃"] },
@@ -852,8 +867,26 @@ function buildTable(rows, cols, tbodyId) {
         if (row.type === "timesel") {
           td.appendChild(makeTimeSelect(`${col}_${row.key}`, row.rangeKey));
 
-        } else if (row.type === "timerange") {
-          td.appendChild(makeTimeRangeCell(col, row.key));
+        } else if (row.type === "timerange" || row.type === "timerange+check") {
+          const wrap = makeTimeRangeCell(col, row.key, row.rangeKey || "range");
+          // 補習加「無」勾選
+          if (row.type === "timerange+check" && row.noOpt) {
+            const lbl = document.createElement("label");
+            lbl.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;margin-top:4px;justify-content:center;cursor:pointer;";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = row.noOpt;
+            cb.className = `cb_${col}_${row.key}_no`;
+            cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
+            // 勾選「無」時停用時間選單
+            cb.addEventListener("change", () => {
+              wrap.querySelectorAll("select").forEach(s => s.disabled = cb.checked);
+            });
+            lbl.appendChild(cb);
+            lbl.appendChild(document.createTextNode(" " + row.noOpt));
+            wrap.appendChild(lbl);
+          }
+          td.appendChild(wrap);
 
         } else if (row.type === "dynamic_cram") {
           td.style.textAlign = "left";
@@ -963,11 +996,17 @@ function collectData() {
       if (row.type === "timesel") {
         const el = document.getElementById(`${col}_${row.key}`);
         data[`${col}_${row.key}`] = el ? el.value : "";
-      } else if (row.type === "timerange") {
-        const s = document.getElementById(`${col}_${row.key}Start`);
-        const e = document.getElementById(`${col}_${row.key}End`);
-        data[`${col}_${row.key}Start`] = s ? s.value : "";
-        data[`${col}_${row.key}End`]   = e ? e.value : "";
+      } else if (row.type === "timerange" || row.type === "timerange+check") {
+        const noCheck = document.querySelector(`.cb_${col}_${row.key}_no:checked`);
+        if (noCheck) {
+          data[`${col}_${row.key}Start`] = "無";
+          data[`${col}_${row.key}End`]   = "無";
+        } else {
+          const s = document.getElementById(`${col}_${row.key}Start`);
+          const e = document.getElementById(`${col}_${row.key}End`);
+          data[`${col}_${row.key}Start`] = s ? s.value : "";
+          data[`${col}_${row.key}End`]   = e ? e.value : "";
+        }
       } else if (row.type === "check" || row.type === "check+text") {
         const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
         data[`${col}_${row.key}`] = checked.join("、");
