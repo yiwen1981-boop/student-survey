@@ -444,6 +444,107 @@
     .site-header h1 { font-size: 1.3rem; }
     .btn { padding: 11px 18px; font-size: 0.88rem; }
   }
+  /* ── Day switcher（手機版） ── */
+  .day-switcher {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+  }
+  .day-nav {
+    background: var(--pale);
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    width: 36px; height: 36px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .day-nav:disabled { opacity: 0.3; cursor: default; }
+  .day-nav:not(:disabled):hover { background: var(--border); }
+  .day-label {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: 0.05em;
+  }
+  .day-dots {
+    display: none;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .dot.active { background: var(--blue); }
+
+  @media (max-width: 700px) {
+    .day-switcher { display: flex; }
+    .day-dots     { display: flex; }
+    /* 手機版隱藏表格，改用單日卡片 */
+    .schedule-wrap table { display: none; }
+    .mobile-day-card { display: block !important; }
+  }
+
+  /* 手機單日卡片 */
+  .mobile-day-card {
+    display: none;
+  }
+  .mobile-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid #EDF3FA;
+    gap: 12px;
+  }
+  .mobile-row:last-child { border-bottom: none; }
+  .mobile-row-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--navy);
+    min-width: 100px;
+    padding-top: 4px;
+    flex-shrink: 0;
+  }
+  .mobile-row-label .row-sublabel {
+    font-size: 0.74rem;
+    color: var(--grey);
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+  }
+  .mobile-row-input {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .mobile-row-input select,
+  .mobile-row-input input[type=text] {
+    width: 100%;
+    max-width: 200px;
+  }
+  .mobile-section-header {
+    background: var(--navy);
+    color: white;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 7px 16px;
+    letter-spacing: 0.05em;
+  }
 </style>
 </head>
 <body>
@@ -569,9 +670,24 @@
   <div class="page" id="page2">
     <div class="page-note">
       📅 <strong>平日作息（星期一～五）</strong><br>
-      時間欄請填入 <strong>HH:MM</strong> 格式（例：07:30）。時間區間請填開始與結束。<br>
-      若當天無該活動，請留空即可，不需填寫。
+      下拉選單選擇時間，若當天無該活動請留空即可。
     </div>
+
+    <!-- 手機版：星期切換列 -->
+    <div class="day-switcher" id="daySwitcher">
+      <button class="day-nav" id="dayPrev" onclick="switchDay(-1)">&#8592;</button>
+      <span class="day-label" id="dayLabel">星期一</span>
+      <button class="day-nav" id="dayNext" onclick="switchDay(1)">&#8594;</button>
+    </div>
+    <!-- 手機版：進度點 -->
+    <div class="day-dots" id="dayDots">
+      <span class="dot active" data-d="0"></span>
+      <span class="dot" data-d="1"></span>
+      <span class="dot" data-d="2"></span>
+      <span class="dot" data-d="3"></span>
+      <span class="dot" data-d="4"></span>
+    </div>
+
     <div class="card">
       <div class="card-header"><span class="icon">🗓</span> 平日一週作息表</div>
       <div class="card-body" style="padding:0">
@@ -585,7 +701,8 @@
             </thead>
             <tbody id="weekdayBody"></tbody>
           </table>
-        </div>
+        </div><!-- /schedule-wrap -->
+        <div class="mobile-day-card" id="mobileDayCard"></div>
       </div>
     </div>
     <div class="btn-row">
@@ -774,8 +891,8 @@ const WEEKDAY_ROWS = [
   { key: "morningExam", label: "早自習", sub: "考試科目（無則留空）", type: "text", ph: "科目名稱" },
 
   { type: "section", label: "二、在校" },
-  { key: "lunch",    label: "午餐", type: "check+text", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"], textKey: "lunchMenu", ph: "營養午餐菜色（選學校午餐者請填）" },
-  { key: "period8",  label: "第八節內容", type: "check", opts: ["考試","上進度","複習","自習","無"] },
+  { key: "lunch",    label: "午餐", type: "radio+text", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"], textKey: "lunchMenu", ph: "營養午餐菜色（選學校午餐者請填）" },
+  { key: "period8",  label: "第八節內容", type: "radio", opts: ["考試","上進度","複習","自習","無"] },
   { key: "schoolEnd",label: "放學時間",   type: "timesel",   rangeKey: "schoolEnd" },
 
   { type: "section", label: "三、放學後" },
@@ -942,27 +1059,35 @@ function buildTable(rows, cols, tbodyId) {
           td.style.textAlign = "left";
           td.appendChild(buildDynamicCram(col));
 
-        } else if (row.type === "check" || row.type === "check+text") {
+        } else if (row.type === "check" || row.type === "check+text"
+                || row.type === "radio" || row.type === "radio+text") {
+          const isRadio = row.type === "radio" || row.type === "radio+text";
           const div = document.createElement("div");
           div.className = "check-group";
           row.opts.forEach(opt => {
             const lbl = document.createElement("label");
-            const cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.value = opt;
-            cb.className = `cb_${col}_${row.key}`;
-            lbl.appendChild(cb);
+            const inp = document.createElement("input");
+            inp.type = isRadio ? "radio" : "checkbox";
+            inp.value = opt;
+            if (isRadio) {
+              inp.name = `${col}_${row.key}_radio`;
+              inp.id   = `${col}_${row.key}_${opt}`;
+            } else {
+              inp.className = `cb_${col}_${row.key}`;
+            }
+            inp.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;";
+            lbl.appendChild(inp);
             lbl.appendChild(document.createTextNode(" " + opt));
             div.appendChild(lbl);
           });
-          if (row.type === "check+text") {
-            const inp = document.createElement("input");
-            inp.type = "text";
-            inp.className = "t-text";
-            inp.style.marginTop = "5px";
-            inp.id = `${col}_${row.textKey}`;
-            inp.placeholder = row.ph || "";
-            div.appendChild(inp);
+          if (row.type === "check+text" || row.type === "radio+text") {
+            const tinp = document.createElement("input");
+            tinp.type = "text";
+            tinp.className = "t-text";
+            tinp.style.marginTop = "5px";
+            tinp.id = `${col}_${row.textKey}`;
+            tinp.placeholder = row.ph || "";
+            div.appendChild(tinp);
           }
           td.appendChild(div);
 
@@ -1057,10 +1182,17 @@ function collectData() {
           data[`${col}_${row.key}Start`] = s ? s.value : "";
           data[`${col}_${row.key}End`]   = e ? e.value : "";
         }
-      } else if (row.type === "check" || row.type === "check+text") {
-        const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
-        data[`${col}_${row.key}`] = checked.join("、");
-        if (row.type === "check+text") {
+      } else if (row.type === "check" || row.type === "check+text"
+              || row.type === "radio" || row.type === "radio+text") {
+        const isRadio = row.type === "radio" || row.type === "radio+text";
+        if (isRadio) {
+          const checked = document.querySelector(`input[name="${col}_${row.key}_radio"]:checked`);
+          data[`${col}_${row.key}`] = checked ? checked.value : "";
+        } else {
+          const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
+          data[`${col}_${row.key}`] = checked.join("、");
+        }
+        if (row.type === "check+text" || row.type === "radio+text") {
           const el = document.getElementById(`${col}_${row.textKey}`);
           data[`${col}_${row.textKey}`] = el ? el.value : "";
         }
@@ -1273,11 +1405,183 @@ function checkAlreadySubmitted() {
 }
 
 // ════════════════════════════════════════════
-// Init
+// 手機版單日切換
 // ════════════════════════════════════════════
+const DAY_NAMES = ["星期一","星期二","星期三","星期四","星期五"];
+const DAY_KEYS  = ["mon","tue","wed","thu","fri"];
+let currentDayIndex = 0;
+
+function isMobile() {
+  return window.innerWidth <= 700;
+}
+
+function buildMobileDayCard(dayIdx) {
+  const col = DAY_KEYS[dayIdx];
+  const card = document.getElementById("mobileDayCard");
+  card.innerHTML = "";
+
+  WEEKDAY_ROWS.forEach(row => {
+    if (row.type === "section") {
+      const hdr = document.createElement("div");
+      hdr.className = "mobile-section-header";
+      hdr.textContent = row.label;
+      card.appendChild(hdr);
+      return;
+    }
+    if (row.type === "merged-text") {
+      // 只在星期一顯示一次
+      if (dayIdx !== 0) return;
+      const div = document.createElement("div");
+      div.className = "mobile-row";
+      const lbl = document.createElement("div");
+      lbl.className = "mobile-row-label";
+      lbl.textContent = row.label;
+      const inp_wrap = document.createElement("div");
+      inp_wrap.className = "mobile-row-input";
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.className = "t-text";
+      inp.id = `merged_${row.key}`;
+      inp.placeholder = (row.ph || "") + "（整週填一次）";
+      inp.style.maxWidth = "100%";
+      inp_wrap.appendChild(inp);
+      div.appendChild(lbl);
+      div.appendChild(inp_wrap);
+      card.appendChild(div);
+      return;
+    }
+
+    const div = document.createElement("div");
+    div.className = "mobile-row";
+
+    const lbl = document.createElement("div");
+    lbl.className = "mobile-row-label";
+    lbl.innerHTML = row.label + (row.sub ? `<span class="row-sublabel">${row.sub}</span>` : "");
+    div.appendChild(lbl);
+
+    const inp_wrap = document.createElement("div");
+    inp_wrap.className = "mobile-row-input";
+
+    if (row.type === "timesel" || row.type === "duration") {
+      const rKey = row.type === "duration" ? "duration" : row.rangeKey;
+      inp_wrap.appendChild(makeTimeSelect(`${col}_${row.key}`, rKey));
+
+    } else if (row.type === "timerange" || row.type === "timerange+check") {
+      const wrap = makeTimeRangeCell(col, row.key, row.rangeKey || "range");
+      wrap.style.alignItems = "flex-end";
+      if (row.type === "timerange+check" && row.noOpt) {
+        const lbl2 = document.createElement("label");
+        lbl2.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;";
+        const cb = document.createElement("input");
+        cb.type = "checkbox"; cb.value = row.noOpt;
+        cb.className = `cb_${col}_${row.key}_no`;
+        cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);";
+        cb.addEventListener("change", () => { wrap.querySelectorAll("select").forEach(s => s.disabled = cb.checked); });
+        lbl2.appendChild(cb);
+        lbl2.appendChild(document.createTextNode(" " + row.noOpt));
+        wrap.appendChild(lbl2);
+      }
+      inp_wrap.appendChild(wrap);
+
+    } else if (row.type === "radio" || row.type === "radio+text"
+            || row.type === "check" || row.type === "check+text") {
+      const isRadio = row.type === "radio" || row.type === "radio+text";
+      const grp = document.createElement("div");
+      grp.className = "check-group";
+      grp.style.alignItems = "flex-end";
+      row.opts.forEach(opt => {
+        const l = document.createElement("label");
+        const i = document.createElement("input");
+        i.type = isRadio ? "radio" : "checkbox";
+        i.value = opt;
+        if (isRadio) { i.name = `${col}_${row.key}_radio`; i.id = `${col}_${row.key}_${opt}`; }
+        else { i.className = `cb_${col}_${row.key}`; }
+        i.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
+        l.appendChild(i); l.appendChild(document.createTextNode(" " + opt));
+        grp.appendChild(l);
+      });
+      if (row.type === "radio+text" || row.type === "check+text") {
+        const ti = document.createElement("input");
+        ti.type = "text"; ti.className = "t-text";
+        ti.id = `${col}_${row.textKey}`; ti.placeholder = row.ph || "";
+        ti.style.marginTop = "5px";
+        grp.appendChild(ti);
+      }
+      inp_wrap.appendChild(grp);
+
+    } else if (row.type === "text") {
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.className = "t-text";
+      inp.id = `${col}_${row.key}`; inp.placeholder = row.ph || "";
+      inp_wrap.appendChild(inp);
+    }
+
+    div.appendChild(inp_wrap);
+    card.appendChild(div);
+  });
+}
+
+function switchDay(dir) {
+  currentDayIndex = Math.max(0, Math.min(4, currentDayIndex + dir));
+  updateDaySwitcher();
+}
+
+function updateDaySwitcher() {
+  if (!isMobile()) return;
+  document.getElementById("dayLabel").textContent = DAY_NAMES[currentDayIndex];
+  document.getElementById("dayPrev").disabled = currentDayIndex === 0;
+  document.getElementById("dayNext").disabled = currentDayIndex === 4;
+  document.querySelectorAll(".dot").forEach((d, i) => {
+    d.classList.toggle("active", i === currentDayIndex);
+  });
+  buildMobileDayCard(currentDayIndex);
+  // 還原已填的值
+  restoreDraftToMobile();
+}
+
+// 點進度點也可切換
+document.querySelectorAll && document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".dot").forEach(d => {
+    d.addEventListener("click", () => {
+      currentDayIndex = parseInt(d.dataset.d);
+      updateDaySwitcher();
+    });
+  });
+});
+
+// 手機版切換時還原已儲存的值
+function restoreDraftToMobile() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    const col = DAY_KEYS[currentDayIndex];
+    // selects
+    document.querySelectorAll("#mobileDayCard select").forEach(el => {
+      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
+    });
+    // text inputs
+    document.querySelectorAll("#mobileDayCard input[type=text]").forEach(el => {
+      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
+    });
+    // checkboxes / radios
+    document.querySelectorAll("#mobileDayCard input[type=checkbox], #mobileDayCard input[type=radio]").forEach(cb => {
+      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
+      if (draft[key] !== undefined) cb.checked = draft[key];
+    });
+  } catch(e) {}
+}
+
+// 視窗大小改變時切換模式
+window.addEventListener("resize", () => {
+  if (isMobile()) updateDaySwitcher();
+});
 buildTable(WEEKDAY_ROWS, WEEKDAY_COLS, "weekdayBody");
 buildTable(WEEKEND_ROWS, WEEKEND_COLS, "weekendBody");
 updateProgress();
+
+// 手機版初始化
+if (isMobile()) updateDaySwitcher();
 
 // 檢查是否已填過
 if (checkAlreadySubmitted()) {
