@@ -1913,7 +1913,6 @@ function restoreDraftToMobile() {
       }
     });
     // 還原學校午餐細節框的顯示狀態
-    const col = DAY_KEYS[currentDayIndex];
     const checkedLunch = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
     const wrap = document.getElementById(`${col}_lunchDetailWrap`);
     if (wrap) wrap.style.display = (checkedLunch?.value === "學校午餐") ? "block" : "none";
