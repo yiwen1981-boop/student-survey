@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -529,7 +528,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 4px;
   }
   .mobile-row-input select,
@@ -703,6 +702,12 @@
           </table>
         </div><!-- /schedule-wrap -->
         <div class="mobile-day-card" id="mobileDayCard"></div>
+        <!-- 複製星期一按鈕 -->
+        <div id="copyMonBtn" style="padding:12px 16px;border-top:1px solid #EDF3FA;">
+          <button class="btn btn-secondary" style="font-size:0.85rem;padding:9px 18px;" onclick="copyMonToAll()">
+            📋 將星期一的起床／出門／到校時間複製到星期二～五
+          </button>
+        </div>
       </div>
     </div>
     <div class="btn-row">
@@ -1418,8 +1423,89 @@ function checkAlreadySubmitted() {
 }
 
 // ════════════════════════════════════════════
-// 手機版單日切換
+// 複製星期一早晨時間到星期二～五
 // ════════════════════════════════════════════
+function copyMonToAll() {
+  const keys = ["wakeup", "leave", "arrive"];
+  const srcCol = "mon";
+  const destCols = ["tue", "wed", "thu", "fri"];
+
+  let copied = false;
+  keys.forEach(key => {
+    // 電腦版
+    const srcEl = document.getElementById(`${srcCol}_${key}`);
+    if (srcEl && srcEl.value) {
+      destCols.forEach(col => {
+        const destEl = document.getElementById(`${col}_${key}`);
+        if (destEl) destEl.value = srcEl.value;
+      });
+      copied = true;
+    }
+  });
+
+  // 手機版：若目前在其他天，重新 render 該天並還原值
+  if (isMobile()) updateDaySwitcher();
+
+  if (copied) showToast("已複製星期一的起床／出門／到校時間到星期二～五 ✅", "success");
+  else showToast("請先填寫星期一的起床、出門或到校時間", "error-t");
+}
+
+// ════════════════════════════════════════════
+// 時間順序驗證（起床 ≤ 出門 ≤ 到校）
+// ════════════════════════════════════════════
+function timeToMin(val) {
+  if (!val) return null;
+  const [h, m] = val.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function validateTimeOrder(col) {
+  const wakeupEl = document.getElementById(`${col}_wakeup`);
+  const leaveEl  = document.getElementById(`${col}_leave`);
+  const arriveEl = document.getElementById(`${col}_arrive`);
+  if (!wakeupEl || !leaveEl || !arriveEl) return true;
+
+  const wakeup = timeToMin(wakeupEl.value);
+  const leave  = timeToMin(leaveEl.value);
+  const arrive = timeToMin(arriveEl.value);
+
+  if (wakeup !== null && leave !== null && leave < wakeup) {
+    showToast("出門時間不能早於起床時間，請重新確認", "error-t");
+    leaveEl.style.borderColor = "var(--error)";
+    return false;
+  }
+  if (leave !== null && arrive !== null && arrive < leave) {
+    showToast("到校時間不能早於出門時間，請重新確認", "error-t");
+    arriveEl.style.borderColor = "var(--error)";
+    return false;
+  }
+  // 清除錯誤樣式
+  [wakeupEl, leaveEl, arriveEl].forEach(el => el.style.borderColor = "");
+  return true;
+}
+
+// 監聽早晨時間欄位變動即時驗證
+function setupTimeOrderValidation() {
+  WEEKDAY_COLS.forEach(col => {
+    ["wakeup","leave","arrive"].forEach(key => {
+      const el = document.getElementById(`${col}_${key}`);
+      if (el) el.addEventListener("change", () => validateTimeOrder(col));
+    });
+  });
+}
+
+// 覆寫 goPage：離開第2頁時驗證所有天的時間順序
+const _origGoPage = goPage;
+function goPage(n) {
+  if (n > currentPage && currentPage === 2) {
+    let allOk = true;
+    WEEKDAY_COLS.forEach(col => {
+      if (!validateTimeOrder(col)) allOk = false;
+    });
+    if (!allOk) return;
+  }
+  _origGoPage(n);
+}
 const DAY_NAMES = ["星期一","星期二","星期三","星期四","星期五"];
 const DAY_KEYS  = ["mon","tue","wed","thu","fri"];
 let currentDayIndex = 0;
@@ -1481,7 +1567,7 @@ function buildMobileDayCard(dayIdx) {
 
     } else if (row.type === "timerange" || row.type === "timerange+check") {
       const wrap = makeTimeRangeCell(col, row.key, row.rangeKey || "range");
-      wrap.style.alignItems = "flex-end";
+      wrap.style.alignItems = "flex-start";
       if (row.type === "timerange+check" && row.noOpt) {
         const lbl2 = document.createElement("label");
         lbl2.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;";
@@ -1501,7 +1587,7 @@ function buildMobileDayCard(dayIdx) {
       const isRadio = row.type === "radio" || row.type === "radio+text";
       const grp = document.createElement("div");
       grp.className = "check-group";
-      grp.style.alignItems = "flex-end";
+      grp.style.alignItems = "flex-start";
       row.opts.forEach(opt => {
         const l = document.createElement("label");
         const i = document.createElement("input");
@@ -1647,7 +1733,7 @@ function buildMobileWeekendCard(dayIdx) {
     } else if (row.type === "check" || row.type === "check+text") {
       const grp = document.createElement("div");
       grp.className = "check-group";
-      grp.style.alignItems = "flex-end";
+      grp.style.alignItems = "flex-start";
       row.opts.forEach(opt => {
         const l = document.createElement("label");
         const i = document.createElement("input");
@@ -1717,6 +1803,9 @@ if (isMobile()) {
   updateDaySwitcher();
   updateWeekendSwitcher();
 }
+
+// 時間順序驗證
+setupTimeOrderValidation();
 
 // 進度點點擊
 document.querySelectorAll("#dayDots .dot").forEach(d => {
