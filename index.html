@@ -1487,6 +1487,12 @@ function restoreDraft() {
       const key = "radio__" + rb.name + "__" + rb.value;
       if (draft[key] !== undefined) rb.checked = draft[key];
     });
+    // 還原學校午餐細節框的顯示狀態
+    WEEKDAY_COLS.forEach(col => {
+      const checked = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
+      const wrap = document.getElementById(`${col}_lunchDetailWrap`);
+      if (wrap) wrap.style.display = (checked?.value === "學校午餐") ? "block" : "none";
+    });
 
     // 還原到上次所在頁
     if (draft["_page"] && draft["_page"] > 1) {
@@ -1655,7 +1661,7 @@ function setupTimeOrderValidation() {
       }
     });
 
-    // 跨日驗證（work/hw/game：結束在 00:00～07:00 才允許跨日，否則必須大於開始）
+    // 跨日驗證（work/hw/game：時段在 15:00～隔天07:00，結束不得早於開始）
     ["work","hw","game"].forEach(key => {
       const sEl = document.getElementById(`${col}_${key}Start`);
       const eEl = document.getElementById(`${col}_${key}End`);
@@ -1664,12 +1670,12 @@ function setupTimeOrderValidation() {
           if (!sEl.value || !eEl.value) { eEl.style.borderColor = ""; return; }
           const s = timeToMin(sEl.value);
           const e = timeToMin(eEl.value);
-          // 允許跨日的條件：結束時間在 00:00～07:00（0～420分鐘）
-          const isCrossday = e >= 0 && e <= 420;
-          const valid = isCrossday ? true : e > s;
-          if (!valid) {
+          // 結束在 00:00～07:00（0～420）視為隔天，轉換為 e+1440 比較
+          const eAdj = (e <= 420) ? e + 1440 : e;
+          // 轉換後結束必須大於開始
+          if (eAdj <= s) {
             eEl.style.borderColor = "var(--error)";
-            showToast("結束時間不能早於開始時間（若為隔日凌晨請選 00:00～07:00）", "error-t");
+            showToast("結束時間不能早於開始時間（隔天凌晨請選 00:00～07:00）", "error-t");
           } else {
             eEl.style.borderColor = "";
           }
@@ -1906,6 +1912,11 @@ function restoreDraftToMobile() {
         if (draft[key] !== undefined) cb.checked = draft[key];
       }
     });
+    // 還原學校午餐細節框的顯示狀態
+    const col = DAY_KEYS[currentDayIndex];
+    const checkedLunch = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
+    const wrap = document.getElementById(`${col}_lunchDetailWrap`);
+    if (wrap) wrap.style.display = (checkedLunch?.value === "學校午餐") ? "block" : "none";
   } catch(e) {}
 }
 
