@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -702,12 +703,6 @@
           </table>
         </div><!-- /schedule-wrap -->
         <div class="mobile-day-card" id="mobileDayCard"></div>
-        <!-- 複製星期一按鈕 -->
-        <div id="copyMonBtn" style="padding:12px 16px;border-top:1px solid #EDF3FA;">
-          <button class="btn btn-secondary" style="font-size:0.85rem;padding:9px 18px;" onclick="copyMonToAll()">
-            📋 將星期一的起床／出門／到校時間複製到星期二～五
-          </button>
-        </div>
       </div>
     </div>
     <div class="btn-row">
@@ -1122,6 +1117,24 @@ function buildTable(rows, cols, tbodyId) {
       });
     }
     tbody.appendChild(tr);
+
+    // 電腦版：在早自習列後插入複製按鈕列（僅 weekdayBody）
+    if (row.key === "morningExam" && tbodyId === "weekdayBody") {
+      const copyTr = document.createElement("tr");
+      copyTr.className = "data-row";
+      copyTr.id = "copyRow";
+      const copyTd = document.createElement("td");
+      copyTd.colSpan = cols.length + 1;
+      copyTd.style.cssText = "padding:8px 14px;background:#F0F8FF;";
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "btn btn-secondary";
+      copyBtn.style.cssText = "font-size:0.82rem;padding:7px 16px;";
+      copyBtn.textContent = "📋 將星期一的起床／出門／到校時間複製到星期二～五";
+      copyBtn.onclick = copyMonToAll;
+      copyTd.appendChild(copyBtn);
+      copyTr.appendChild(copyTd);
+      tbody.appendChild(copyTr);
+    }
   });
 }
 
@@ -1618,6 +1631,18 @@ function buildMobileDayCard(dayIdx) {
     div.appendChild(inp_wrap);
     card.appendChild(div);
   });
+  // 手機版：星期一底部加複製按鈕
+  if (dayIdx === 0) {
+    const copyDiv = document.createElement("div");
+    copyDiv.style.cssText = "padding:12px 16px;border-top:1px solid #EDF3FA;";
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "btn btn-secondary";
+    copyBtn.style.cssText = "font-size:0.82rem;padding:8px 16px;width:100%;";
+    copyBtn.textContent = "📋 將起床／出門／到校時間複製到星期二～五";
+    copyBtn.onclick = copyMonToAll;
+    copyDiv.appendChild(copyBtn);
+    card.appendChild(copyDiv);
+  }
 }
 
 function switchDay(dir) {
