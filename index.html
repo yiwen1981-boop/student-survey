@@ -1444,20 +1444,39 @@ function copyMonToAll() {
   const destCols = ["tue", "wed", "thu", "fri"];
 
   let copied = false;
-  keys.forEach(key => {
-    // 電腦版
-    const srcEl = document.getElementById(`${srcCol}_${key}`);
-    if (srcEl && srcEl.value) {
-      destCols.forEach(col => {
-        const destEl = document.getElementById(`${col}_${key}`);
-        if (destEl) destEl.value = srcEl.value;
-      });
-      copied = true;
-    }
-  });
 
-  // 手機版：若目前在其他天，重新 render 該天並還原值
-  if (isMobile()) updateDaySwitcher();
+  if (isMobile()) {
+    // 手機版：從 mobileDayCard（目前顯示星期一）讀取值，存入 draft，再 re-render
+    keys.forEach(key => {
+      const srcEl = document.getElementById(`${srcCol}_${key}`);
+      if (srcEl && srcEl.value) {
+        copied = true;
+        destCols.forEach(col => {
+          // 直接寫進 draft
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            const draft = raw ? JSON.parse(raw) : {};
+            draft[`${col}_${key}`] = srcEl.value;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+          } catch(e) {}
+        });
+      }
+    });
+    // re-render 目前天（若不是星期一，也會在切換時還原）
+    updateDaySwitcher();
+  } else {
+    // 電腦版
+    keys.forEach(key => {
+      const srcEl = document.getElementById(`${srcCol}_${key}`);
+      if (srcEl && srcEl.value) {
+        destCols.forEach(col => {
+          const destEl = document.getElementById(`${col}_${key}`);
+          if (destEl) destEl.value = srcEl.value;
+        });
+        copied = true;
+      }
+    });
+  }
 
   if (copied) showToast("已複製星期一的起床／出門／到校時間到星期二～五 ✅", "success");
   else showToast("請先填寫星期一的起床、出門或到校時間", "error-t");
@@ -1507,10 +1526,17 @@ function setupTimeOrderValidation() {
   });
 }
 
-// 覆寫 goPage：離開第2頁時驗證所有天的時間順序
+// 覆寫 goPage：離開第2頁時驗證所有天的時間順序，手機版也提醒填完五天
 const _origGoPage = goPage;
 function goPage(n) {
   if (n > currentPage && currentPage === 2) {
+    // 手機版：提醒學生填完星期二～五
+    if (isMobile() && currentDayIndex < 4) {
+      const remaining = DAY_NAMES.slice(currentDayIndex + 1).join("、");
+      showToast(`請先完成 ${remaining} 的填答，再進入下一步`, "error-t");
+      return;
+    }
+    // 時間順序驗證
     let allOk = true;
     WEEKDAY_COLS.forEach(col => {
       if (!validateTimeOrder(col)) allOk = false;
@@ -1580,7 +1606,7 @@ function buildMobileDayCard(dayIdx) {
 
     } else if (row.type === "timerange" || row.type === "timerange+check") {
       const wrap = makeTimeRangeCell(col, row.key, row.rangeKey || "range");
-      wrap.style.alignItems = "flex-start";
+      // wrap 本身保持 align-items:center（箭頭置中），不覆寫
       if (row.type === "timerange+check" && row.noOpt) {
         const lbl2 = document.createElement("label");
         lbl2.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;";
