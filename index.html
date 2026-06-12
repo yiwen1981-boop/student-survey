@@ -1191,6 +1191,8 @@ function buildTable(rows, cols, tbodyId) {
 // ════════════════════════════════════════════
 // Page navigation
 // ════════════════════════════════════════════
+const DAY_NAMES = ["星期一","星期二","星期三","星期四","星期五"];
+const DAY_KEYS  = ["mon","tue","wed","thu","fri"];
 let currentPage = 1;
 const TOTAL_PAGES = 3;
 
@@ -1687,8 +1689,6 @@ function setupTimeOrderValidation() {
   });
 }
 
-const DAY_NAMES = ["星期一","星期二","星期三","星期四","星期五"];
-const DAY_KEYS  = ["mon","tue","wed","thu","fri"];
 let currentDayIndex = 0;
 
 function isMobile() {
