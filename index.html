@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -858,6 +859,7 @@ const TIME_RANGES = {
   wakeupWeekend:   genTimes(0, 23),                  // 週末起床 全天
   hwGame:          genTimesFrom("15:00", "30:00"),   // 平日寫作業/打電動 15:00～06:00
   sleepWeekday:    genTimesFrom("18:00", "30:00"),   // 平日睡覺 18:00～06:00
+  crossday:        genTimesFrom("00:00", "30:00"),   // 跨日全範圍 00:00～06:00
   duration:        genDuration(),                    // 總時數 30分～8小時以上
   range:           genTimes(6, 27),                  // 通用 06:00～03:50
 };
@@ -903,18 +905,19 @@ const WEEKDAY_ROWS = [
   { key: "morningExam", label: "早自習", sub: "考試科目（無則留空）", type: "text", ph: "科目名稱" },
 
   { type: "section", label: "二、在校" },
-  { key: "lunch",    label: "午餐", type: "radio+text", opts: ["自帶便當","學校午餐","外食/訂便當","不吃"], textKey: "lunchMenu", ph: "營養午餐菜色（選學校午餐者請填）" },
-  { key: "period8",  label: "第八節內容", type: "radio", opts: ["考試","上進度","複習","自習","無"] },
-  { key: "schoolEnd",label: "放學時間",   type: "timesel",   rangeKey: "schoolEnd" },
+  { key: "lunch",       label: "午餐",         type: "radio",        opts: ["自帶便當","學校午餐","外食/訂便當","不吃"] },
+  { key: "lunchDetail", label: "學校午餐內容",  type: "lunch-detail", showIf: "學校午餐" },
+  { key: "period8",     label: "第八節內容",    type: "radio",        opts: ["考試","上進度","複習","自習","無"] },
+  { key: "schoolEnd",   label: "放學時間",      type: "timesel",      rangeKey: "schoolEnd" },
 
   { type: "section", label: "三、放學後" },
   { key: "cram",     label: "補習",         type: "timerange+check", rangeKey: "cram" },
   { key: "study",    label: "課輔/留校自習", type: "timerange",       rangeKey: "schoolAfternoon" },
   { key: "club",     label: "才藝班/社團",  type: "timerange",       rangeKey: "schoolAfternoon" },
-  { key: "work",     label: "打工",         type: "timerange",       rangeKey: "afternoon" },
+  { key: "work",     label: "打工",         type: "timerange",       rangeKey: "crossday" },
   { key: "workType", label: "打工內容",     type: "text", ph: "例：超商，若無留空" },
-  { key: "hw",       label: "寫作業/唸書",       type: "timerange",       rangeKey: "hwGame" },
-  { key: "game",     label: "打電動/上社群", type: "timerange",       rangeKey: "hwGame" },
+  { key: "hw",       label: "寫作業/唸書",  type: "timerange",       rangeKey: "crossday" },
+  { key: "game",     label: "打電動/上社群", type: "timerange",      rangeKey: "crossday" },
   { key: "gameName", label: "遊戲/社群名稱", type: "merged-text", ph: "例：IG、Minecraft（整週填一次）" },
   { key: "leisure",  label: "其他休閒活動", type: "text", ph: "例：看書、運動" },
   { key: "sleep",    label: "睡覺時間",     type: "timesel",   rangeKey: "sleepWeekday" },
@@ -1071,8 +1074,39 @@ function buildTable(rows, cols, tbodyId) {
           td.style.textAlign = "left";
           td.appendChild(buildDynamicCram(col));
 
-        } else if (row.type === "check" || row.type === "check+text"
-                || row.type === "radio" || row.type === "radio+text") {
+        } else if (row.type === "lunch-detail") {
+          const detailOpts = ["有炸物","有加工食品","與菜單相符"];
+          const wrap = document.createElement("div");
+          wrap.id = `${col}_lunchDetailWrap`;
+          wrap.style.cssText = "display:none;";
+          const grp = document.createElement("div");
+          grp.className = "check-group";
+          detailOpts.forEach(opt => {
+            const lbl = document.createElement("label");
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = opt;
+            cb.className = `cb_${col}_lunchDetail`;
+            cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;";
+            lbl.appendChild(cb);
+            lbl.appendChild(document.createTextNode(" " + opt));
+            grp.appendChild(lbl);
+          });
+          wrap.appendChild(grp);
+          td.appendChild(wrap);
+
+          // 監聽同欄 lunch radio，決定是否顯示
+          setTimeout(() => {
+            document.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb => {
+              rb.addEventListener("change", () => {
+                const show = document.querySelector(`input[name="${col}_lunch_radio"]:checked`)?.value === "學校午餐";
+                wrap.style.display = show ? "block" : "none";
+              });
+            });
+            // 初始檢查（還原草稿時）
+            const checked = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
+            if (checked?.value === "學校午餐") wrap.style.display = "block";
+          }, 0);
           const isRadio = row.type === "radio" || row.type === "radio+text";
           const div = document.createElement("div");
           div.className = "check-group";
@@ -1231,6 +1265,9 @@ function collectData() {
           data[`${col}_${row.key}Start`] = s ? s.value : "";
           data[`${col}_${row.key}End`]   = e ? e.value : "";
         }
+      } else if (row.type === "lunch-detail") {
+        const checked = [...document.querySelectorAll(`.cb_${col}_lunchDetail:checked`)].map(c => c.value);
+        data[`${col}_lunchDetail`] = checked.join("、");
       } else if (row.type === "check" || row.type === "check+text"
               || row.type === "radio" || row.type === "radio+text") {
         const isRadio = row.type === "radio" || row.type === "radio+text";
@@ -1545,7 +1582,7 @@ function validateTimeOrder(col) {
 
 // 驗證所有時間區間：結束不得早於或等於開始
 function validateAllTimeRanges() {
-  const rangeKeys = ["cram","study","club","work","hw","game"];
+  const rangeKeys = ["cram","study","club"]; // work/hw/game 可跨日，不驗證
   const dayNames = { mon:"星期一", tue:"星期二", wed:"星期三", thu:"星期四", fri:"星期五" };
   let allOk = true;
   WEEKDAY_COLS.forEach(col => {
@@ -1673,6 +1710,36 @@ function buildMobileDayCard(dayIdx) {
         wrap.appendChild(lbl2);
       }
       inp_wrap.appendChild(wrap);
+
+    } else if (row.type === "lunch-detail") {
+      const detailOpts = ["有炸物","有加工食品","與菜單相符"];
+      const wrap = document.createElement("div");
+      wrap.id = `${col}_lunchDetailWrap`;
+      wrap.style.cssText = "display:none;";
+      const grp = document.createElement("div");
+      grp.className = "check-group";
+      grp.style.alignItems = "flex-start";
+      detailOpts.forEach(opt => {
+        const l = document.createElement("label");
+        const cb = document.createElement("input");
+        cb.type = "checkbox"; cb.value = opt;
+        cb.className = `cb_${col}_lunchDetail`;
+        cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
+        l.appendChild(cb); l.appendChild(document.createTextNode(" " + opt));
+        grp.appendChild(l);
+      });
+      wrap.appendChild(grp);
+      inp_wrap.appendChild(wrap);
+      setTimeout(() => {
+        document.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb => {
+          rb.addEventListener("change", () => {
+            const show = document.querySelector(`input[name="${col}_lunch_radio"]:checked`)?.value === "學校午餐";
+            wrap.style.display = show ? "block" : "none";
+          });
+        });
+        const checked = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
+        if (checked?.value === "學校午餐") wrap.style.display = "block";
+      }, 0);
 
     } else if (row.type === "radio" || row.type === "radio+text"
             || row.type === "check" || row.type === "check+text") {
