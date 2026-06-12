@@ -1633,8 +1633,9 @@ function setupTimeOrderValidation() {
       const el = document.getElementById(`${col}_${key}`);
       if (el) el.addEventListener("change", () => validateTimeOrder(col));
     });
-    // 即時驗證放學後各時段：結束不能早於開始
-    ["cram","study","club","work","hw","game"].forEach(key => {
+
+    // 同日驗證（cram/study/club：結束不得早於或等於開始）
+    ["cram","study","club"].forEach(key => {
       const sEl = document.getElementById(`${col}_${key}Start`);
       const eEl = document.getElementById(`${col}_${key}End`);
       if (sEl && eEl) {
@@ -1645,6 +1646,30 @@ function setupTimeOrderValidation() {
           if (e <= s) {
             eEl.style.borderColor = "var(--error)";
             showToast("結束時間不能早於或等於開始時間", "error-t");
+          } else {
+            eEl.style.borderColor = "";
+          }
+        };
+        eEl.addEventListener("change", check);
+        sEl.addEventListener("change", check);
+      }
+    });
+
+    // 跨日驗證（work/hw/game：允許跨日，但結束需在開始的24小時內）
+    ["work","hw","game"].forEach(key => {
+      const sEl = document.getElementById(`${col}_${key}Start`);
+      const eEl = document.getElementById(`${col}_${key}End`);
+      if (sEl && eEl) {
+        const check = () => {
+          if (!sEl.value || !eEl.value) { eEl.style.borderColor = ""; return; }
+          const s = timeToMin(sEl.value);
+          const e = timeToMin(eEl.value);
+          // 跨日：若結束 <= 開始，視為隔日（加24小時）
+          const eAdj = e <= s ? e + 24 * 60 : e;
+          // 跨日後仍需合理：不超過24小時（即 eAdj < s + 24*60）
+          if (eAdj >= s + 24 * 60) {
+            eEl.style.borderColor = "var(--error)";
+            showToast("時間區間不合理，請重新確認", "error-t");
           } else {
             eEl.style.borderColor = "";
           }
