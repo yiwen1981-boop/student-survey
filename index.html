@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -1094,7 +1093,6 @@ function buildTable(rows, cols, tbodyId) {
           });
           wrap.appendChild(grp);
           td.appendChild(wrap);
-
           // 監聽同欄 lunch radio，決定是否顯示
           setTimeout(() => {
             document.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb => {
@@ -1103,10 +1101,12 @@ function buildTable(rows, cols, tbodyId) {
                 wrap.style.display = show ? "block" : "none";
               });
             });
-            // 初始檢查（還原草稿時）
             const checked = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
             if (checked?.value === "學校午餐") wrap.style.display = "block";
           }, 0);
+
+        } else if (row.type === "check" || row.type === "check+text"
+                || row.type === "radio" || row.type === "radio+text") {
           const isRadio = row.type === "radio" || row.type === "radio+text";
           const div = document.createElement("div");
           div.className = "check-group";
