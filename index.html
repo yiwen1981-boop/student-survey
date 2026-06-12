@@ -1655,7 +1655,7 @@ function setupTimeOrderValidation() {
       }
     });
 
-    // 跨日驗證（work/hw/game：允許跨日，但結束需在開始的24小時內）
+    // 跨日驗證（work/hw/game：結束在 00:00～07:00 才允許跨日，否則必須大於開始）
     ["work","hw","game"].forEach(key => {
       const sEl = document.getElementById(`${col}_${key}Start`);
       const eEl = document.getElementById(`${col}_${key}End`);
@@ -1664,12 +1664,12 @@ function setupTimeOrderValidation() {
           if (!sEl.value || !eEl.value) { eEl.style.borderColor = ""; return; }
           const s = timeToMin(sEl.value);
           const e = timeToMin(eEl.value);
-          // 跨日：若結束 <= 開始，視為隔日（加24小時）
-          const eAdj = e <= s ? e + 24 * 60 : e;
-          // 跨日後仍需合理：不超過24小時（即 eAdj < s + 24*60）
-          if (eAdj >= s + 24 * 60) {
+          // 允許跨日的條件：結束時間在 00:00～07:00（0～420分鐘）
+          const isCrossday = e >= 0 && e <= 420;
+          const valid = isCrossday ? true : e > s;
+          if (!valid) {
             eEl.style.borderColor = "var(--error)";
-            showToast("時間區間不合理，請重新確認", "error-t");
+            showToast("結束時間不能早於開始時間（若為隔日凌晨請選 00:00～07:00）", "error-t");
           } else {
             eEl.style.borderColor = "";
           }
