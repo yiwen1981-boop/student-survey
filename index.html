@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -1388,6 +1387,10 @@ function saveDraft() {
       const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
       draft[key] = cb.checked;
     });
+    // radio buttons（午餐、第八節等，手機版在 mobileDayCard 裡）
+    document.querySelectorAll("#page2 input[type=radio], #mobileDayCard input[type=radio]").forEach(rb => {
+      if (rb.name) draft["radio__" + rb.name + "__" + rb.value] = rb.checked;
+    });
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   } catch(e) {}
@@ -1420,6 +1423,11 @@ function restoreDraft() {
     document.querySelectorAll("#page1 input[type=checkbox], #page2 input[type=checkbox], #page3 input[type=checkbox]").forEach(cb => {
       const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
       if (draft[key] !== undefined) cb.checked = draft[key];
+    });
+    // radio buttons
+    document.querySelectorAll("#page2 input[type=radio]").forEach(rb => {
+      const key = "radio__" + rb.name + "__" + rb.value;
+      if (draft[key] !== undefined) rb.checked = draft[key];
     });
 
     // 還原到上次所在頁
@@ -1535,9 +1543,10 @@ function validateTimeOrder(col) {
   return true;
 }
 
-// 驗證所有時間區間：結束不得早於開始
+// 驗證所有時間區間：結束不得早於或等於開始
 function validateAllTimeRanges() {
   const rangeKeys = ["cram","study","club","work","hw","game"];
+  const dayNames = { mon:"星期一", tue:"星期二", wed:"星期三", thu:"星期四", fri:"星期五" };
   let allOk = true;
   WEEKDAY_COLS.forEach(col => {
     rangeKeys.forEach(key => {
@@ -1547,10 +1556,8 @@ function validateAllTimeRanges() {
       if (!sEl.value || !eEl.value) return; // 留空視為無活動，跳過
       const s = timeToMin(sEl.value);
       const e = timeToMin(eEl.value);
-      // 跨日處理：結束若小於開始，加24小時
-      const eAdj = e < s ? e + 24 * 60 : e;
-      if (eAdj <= s) {
-        showToast(`${col === "mon" ? "星期一" : col === "tue" ? "星期二" : col === "wed" ? "星期三" : col === "thu" ? "星期四" : "星期五"} 的結束時間不能早於開始時間，請重新確認`, "error-t");
+      if (e <= s) {
+        showToast(`${dayNames[col]} 的結束時間不能早於開始時間，請重新確認`, "error-t");
         eEl.style.borderColor = "var(--error)";
         allOk = false;
       } else {
@@ -1567,6 +1574,26 @@ function setupTimeOrderValidation() {
     ["wakeup","leave","arrive"].forEach(key => {
       const el = document.getElementById(`${col}_${key}`);
       if (el) el.addEventListener("change", () => validateTimeOrder(col));
+    });
+    // 即時驗證放學後各時段：結束不能早於開始
+    ["cram","study","club","work","hw","game"].forEach(key => {
+      const sEl = document.getElementById(`${col}_${key}Start`);
+      const eEl = document.getElementById(`${col}_${key}End`);
+      if (sEl && eEl) {
+        const check = () => {
+          if (!sEl.value || !eEl.value) { eEl.style.borderColor = ""; return; }
+          const s = timeToMin(sEl.value);
+          const e = timeToMin(eEl.value);
+          if (e <= s) {
+            eEl.style.borderColor = "var(--error)";
+            showToast("結束時間不能早於或等於開始時間", "error-t");
+          } else {
+            eEl.style.borderColor = "";
+          }
+        };
+        eEl.addEventListener("change", check);
+        sEl.addEventListener("change", check);
+      }
     });
   });
 }
@@ -1742,8 +1769,13 @@ function restoreDraftToMobile() {
     });
     // checkboxes / radios
     document.querySelectorAll("#mobileDayCard input[type=checkbox], #mobileDayCard input[type=radio]").forEach(cb => {
-      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
-      if (draft[key] !== undefined) cb.checked = draft[key];
+      if (cb.type === "radio" && cb.name) {
+        const key = "radio__" + cb.name + "__" + cb.value;
+        if (draft[key] !== undefined) cb.checked = draft[key];
+      } else {
+        const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
+        if (draft[key] !== undefined) cb.checked = draft[key];
+      }
     });
   } catch(e) {}
 }
