@@ -1146,6 +1146,25 @@ const TOTAL_PAGES = 3;
 
 function goPage(n) {
   if (n > currentPage && !validatePage(currentPage)) return;
+
+  // 離開第2頁時的額外驗證
+  if (n > currentPage && currentPage === 2) {
+    // 手機版：提醒學生填完星期二～五
+    if (isMobile() && currentDayIndex < 4) {
+      const remaining = DAY_NAMES.slice(currentDayIndex + 1).join("、");
+      showToast(`請先完成 ${remaining} 的填答，再進入下一步`, "error-t");
+      return;
+    }
+    // 時間順序驗證
+    let allOk = true;
+    WEEKDAY_COLS.forEach(col => {
+      if (!validateTimeOrder(col)) allOk = false;
+    });
+    if (!allOk) return;
+    // 時段結束不得早於開始的驗證
+    if (!validateAllTimeRanges()) return;
+  }
+
   document.getElementById("page" + currentPage).classList.remove("active");
   currentPage = n;
   document.getElementById("page" + currentPage).classList.add("active");
@@ -1516,6 +1535,32 @@ function validateTimeOrder(col) {
   return true;
 }
 
+// 驗證所有時間區間：結束不得早於開始
+function validateAllTimeRanges() {
+  const rangeKeys = ["cram","study","club","work","hw","game"];
+  let allOk = true;
+  WEEKDAY_COLS.forEach(col => {
+    rangeKeys.forEach(key => {
+      const sEl = document.getElementById(`${col}_${key}Start`);
+      const eEl = document.getElementById(`${col}_${key}End`);
+      if (!sEl || !eEl) return;
+      if (!sEl.value || !eEl.value) return; // 留空視為無活動，跳過
+      const s = timeToMin(sEl.value);
+      const e = timeToMin(eEl.value);
+      // 跨日處理：結束若小於開始，加24小時
+      const eAdj = e < s ? e + 24 * 60 : e;
+      if (eAdj <= s) {
+        showToast(`${col === "mon" ? "星期一" : col === "tue" ? "星期二" : col === "wed" ? "星期三" : col === "thu" ? "星期四" : "星期五"} 的結束時間不能早於開始時間，請重新確認`, "error-t");
+        eEl.style.borderColor = "var(--error)";
+        allOk = false;
+      } else {
+        eEl.style.borderColor = "";
+      }
+    });
+  });
+  return allOk;
+}
+
 // 監聽早晨時間欄位變動即時驗證
 function setupTimeOrderValidation() {
   WEEKDAY_COLS.forEach(col => {
@@ -1526,25 +1571,6 @@ function setupTimeOrderValidation() {
   });
 }
 
-// 覆寫 goPage：離開第2頁時驗證所有天的時間順序，手機版也提醒填完五天
-const _origGoPage = goPage;
-function goPage(n) {
-  if (n > currentPage && currentPage === 2) {
-    // 手機版：提醒學生填完星期二～五
-    if (isMobile() && currentDayIndex < 4) {
-      const remaining = DAY_NAMES.slice(currentDayIndex + 1).join("、");
-      showToast(`請先完成 ${remaining} 的填答，再進入下一步`, "error-t");
-      return;
-    }
-    // 時間順序驗證
-    let allOk = true;
-    WEEKDAY_COLS.forEach(col => {
-      if (!validateTimeOrder(col)) allOk = false;
-    });
-    if (!allOk) return;
-  }
-  _origGoPage(n);
-}
 const DAY_NAMES = ["星期一","星期二","星期三","星期四","星期五"];
 const DAY_KEYS  = ["mon","tue","wed","thu","fri"];
 let currentDayIndex = 0;
