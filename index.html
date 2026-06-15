@@ -1516,6 +1516,14 @@ function setupAutosave() {
       pg.addEventListener("input",  saveDraft);
     }
   });
+  // 手機版動態卡片也需要監聽（欄位在 mobileDayCard / mobileWeekendCard 內）
+  ["mobileDayCard","mobileWeekendCard"].forEach(cid => {
+    const card = document.getElementById(cid);
+    if (card) {
+      card.addEventListener("change", saveDraft);
+      card.addEventListener("input",  saveDraft);
+    }
+  });
 }
 
 // 送出後鎖定（唯一寫入 SUBMITTED_KEY 的地方）
@@ -1875,6 +1883,12 @@ function updateDaySwitcher() {
   buildMobileDayCard(currentDayIndex);
   // 還原已填的值
   restoreDraftToMobile();
+  // 重新掛上自動儲存監聽（每次重建卡片後監聽器會消失）
+  const card = document.getElementById("mobileDayCard");
+  if (card) {
+    card.addEventListener("change", saveDraft);
+    card.addEventListener("input",  saveDraft);
+  }
 }
 
 // 點進度點也可切換
@@ -2036,6 +2050,12 @@ function updateWeekendSwitcher() {
     d.classList.toggle("active", i === currentWeekendIndex);
   });
   buildMobileWeekendCard(currentWeekendIndex);
+  // 重新掛上自動儲存監聽
+  const card = document.getElementById("mobileWeekendCard");
+  if (card) {
+    card.addEventListener("change", saveDraft);
+    card.addEventListener("input",  saveDraft);
+  }
 }
 
 // 週末進度點點擊
