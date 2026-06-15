@@ -1421,7 +1421,13 @@ function saveDraft() {
   // 絕對不能在這裡碰 SUBMITTED_KEY
   if (checkAlreadySubmitted()) return;
   try {
-    const draft = {};
+    // 先讀取既有 draft，疊加更新，避免手機版切換天時蓋掉其他天的資料
+    let draft = {};
+    try {
+      const existing = localStorage.getItem(STORAGE_KEY);
+      if (existing) draft = JSON.parse(existing);
+    } catch(e) {}
+
     draft["_page"] = currentPage;
 
     // 基本資料
@@ -1434,21 +1440,21 @@ function saveDraft() {
     });
     draft["schoolType"] = (document.querySelector('input[name="schoolType"]:checked') || {}).value || "";
 
-    // 所有 select（排除 page4/page5）
-    document.querySelectorAll("#page1 select, #page2 select, #page3 select").forEach(el => {
+    // 所有 select（只更新目前 DOM 中有的）
+    document.querySelectorAll("#page1 select, #page2 select, #page3 select, #mobileDayCard select, #mobileWeekendCard select").forEach(el => {
       if (el.id) draft[el.id] = el.value;
     });
-    // 所有 text input（排除 page4/page5）
-    document.querySelectorAll("#page1 input[type=text], #page2 input[type=text], #page3 input[type=text]").forEach(el => {
+    // 所有 text input
+    document.querySelectorAll("#page1 input[type=text], #page2 input[type=text], #page3 input[type=text], #mobileDayCard input[type=text], #mobileWeekendCard input[type=text]").forEach(el => {
       if (el.id) draft[el.id] = el.value;
     });
-    // checkboxes（排除 page4/page5）
-    document.querySelectorAll("#page1 input[type=checkbox], #page2 input[type=checkbox], #page3 input[type=checkbox]").forEach(cb => {
+    // checkboxes
+    document.querySelectorAll("#page1 input[type=checkbox], #page2 input[type=checkbox], #page3 input[type=checkbox], #mobileDayCard input[type=checkbox], #mobileWeekendCard input[type=checkbox]").forEach(cb => {
       const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
       draft[key] = cb.checked;
     });
-    // radio buttons（午餐、第八節等，手機版在 mobileDayCard 裡）
-    document.querySelectorAll("#page2 input[type=radio], #mobileDayCard input[type=radio]").forEach(rb => {
+    // radio buttons
+    document.querySelectorAll("#page2 input[type=radio], #mobileDayCard input[type=radio], #mobileWeekendCard input[type=radio]").forEach(rb => {
       if (rb.name) draft["radio__" + rb.name + "__" + rb.value] = rb.checked;
     });
 
