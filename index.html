@@ -220,6 +220,21 @@
         <div class="once-section" id="onceSection">
           <table class="once-table">
             <tbody>
+              <tr class="once-section-row"><td colspan="2">📌 一、早晨平均時間（整週只填一次）</td></tr>
+
+              <tr class="once-row">
+                <td class="once-label-cell">大約都幾點起床？</td>
+                <td class="once-input-cell"><select id="once_wakeup" class="once-select"></select></td>
+              </tr>
+              <tr class="once-row">
+                <td class="once-label-cell">大概都幾點出門？</td>
+                <td class="once-input-cell"><select id="once_leave" class="once-select"></select></td>
+              </tr>
+              <tr class="once-row">
+                <td class="once-label-cell">平均幾點到校？</td>
+                <td class="once-input-cell"><select id="once_arrive" class="once-select"></select></td>
+              </tr>
+
               <tr class="once-section-row"><td colspan="2">📌 三、放學後（整週只填一次）</td></tr>
 
               <!-- 補習科目 -->
@@ -390,12 +405,15 @@ const TIME_RANGES={
 // 填充整週一次用的 select
 function fillSelect(id,opts){const el=document.getElementById(id);if(!el)return;el.innerHTML="";opts.forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t;el.appendChild(o);});}
 function initOnceSelects(){
-  fillSelect("once_cramTotal",genStepHr(1200));   // 1h~20h 每30min
-  fillSelect("once_clubTotal",genStepHr(960));    // 1h~16h 每30min
-  fillSelect("once_workTotal",genHrOnly(20));     // 1h~20h 每1h
-  fillSelect("once_gameDaily",genHrOnly(30));     // 1h~30h 每1h
+  fillSelect("once_wakeup",TIME_RANGES.wakeup);
+  fillSelect("once_leave",TIME_RANGES.leave);
+  fillSelect("once_arrive",TIME_RANGES.arrive);
+  fillSelect("once_cramTotal",genStepHr(1200));
+  fillSelect("once_clubTotal",genStepHr(960));
+  fillSelect("once_workTotal",genHrOnly(20));
+  fillSelect("once_gameDaily",genHrOnly(30));
   fillSelect("once_sleepAvgTime",TIME_RANGES.sleepWeekday);
-  fillSelect("once_sleepAvgHours",genStepHr(720)); // 1h~12h 每30min
+  fillSelect("once_sleepAvgHours",genStepHr(720));
   fillSelect("once_sleepFri",TIME_RANGES.sleepWeekday);
 }
 
@@ -425,13 +443,10 @@ function makeTimeRangeCell(col,key,rangeKey="range"){
 // ── 表格定義（每天各填的部分）──
 const WEEKDAY_ROWS=[
   {type:"section",label:"一、早晨"},
-  {key:"wakeup",label:"起床時間",type:"timesel",rangeKey:"wakeup"},
-  {key:"leave",label:"出門時間",type:"timesel",rangeKey:"leave"},
-  {key:"arrive",label:"到校時間",type:"timesel",rangeKey:"arrive"},
   {key:"morningExam",label:"早自習",sub:"考試科目（無則留空）",type:"text",ph:"科目名稱"},
   {type:"section",label:"二、在校"},
   {key:"lunch",label:"午餐",type:"radio-lunch",opts:["自帶便當","學校午餐","外食/訂便當","不吃"]},
-  {key:"period8",label:"第八節內容",type:"radio",opts:["考試","上進度","複習","自習","無"]},
+  {key:"period8",label:"第八節內容",type:"radio",opts:["考試","上進度","複習","自習","無第八節"]},
   {key:"schoolEnd",label:"放學時間",type:"timesel",rangeKey:"schoolEnd"},
 ];
 
@@ -522,7 +537,6 @@ function goPage(n){
   if(n>currentPage&&!validatePage(currentPage))return;
   if(n>currentPage&&currentPage===2){
     if(isMobile()&&currentDayIndex<4){showToast(`請先完成 ${DAY_NAMES.slice(currentDayIndex+1).join("、")} 的填答，再進入下一步`,"error-t");return;}
-    let ok=true;WEEKDAY_COLS.forEach(col=>{if(!validateTimeOrder(col))ok=false;});if(!ok)return;
   }
   document.getElementById("page"+currentPage).classList.remove("active");
   currentPage=n;document.getElementById("page"+currentPage).classList.add("active");
@@ -554,6 +568,9 @@ function collectData(){
     gender:document.getElementById("f_gender").value,
     commute:[...document.querySelectorAll(".commute:checked")].map(c=>c.value).join("、"),
     // 整週一次
+    wakeup:(document.getElementById("once_wakeup")||{}).value||"",
+    leave:(document.getElementById("once_leave")||{}).value||"",
+    arrive:(document.getElementById("once_arrive")||{}).value||"",
     cramSubjects:[...document.querySelectorAll(".once_cb_cramSubjects:checked")].map(c=>c.value).join("、"),
     cramTotal:(document.getElementById("once_cramTotal")||{}).value||"",
     club:(document.querySelector('input[name="once_club_radio"]:checked')||{}).value||"",
@@ -834,7 +851,6 @@ initOnceSelects();
 updateOnceVis();
 updateProgress();
 if(isMobile()){updateDaySwitcher();updateWeekendSwitcher();}
-setupTimeOrderValidation();
 document.querySelectorAll("#dayDots .dot").forEach(d=>{d.addEventListener("click",()=>{currentDayIndex=parseInt(d.dataset.d);updateDaySwitcher();});});
 document.querySelectorAll("#weekendDots .dot").forEach(d=>{d.addEventListener("click",()=>{currentWeekendIndex=parseInt(d.dataset.w);updateWeekendSwitcher();});});
 
