@@ -90,16 +90,24 @@
   .mobile-row-input{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px;}
   .mobile-row-input select,.mobile-row-input input[type=text]{width:100%;max-width:220px;}
   .mobile-section-header{background:var(--navy);color:white;font-weight:700;font-size:.82rem;padding:7px 16px;letter-spacing:.05em;}
-  .once-section{background:#F0F8FF;border-left:4px solid var(--blue);padding:16px 20px;margin:12px 0;border-radius:0 8px 8px 0;}
-  .once-section h4{font-size:.9rem;font-weight:700;color:var(--navy);margin-bottom:12px;}
-  .once-item{margin-bottom:14px;}
-  .once-item label.once-label{font-size:.85rem;font-weight:600;color:var(--navy);display:block;margin-bottom:6px;}
-  .once-item label.once-label .once-sub{font-size:.76rem;color:var(--grey);font-weight:400;margin-left:6px;}
-  .once-opts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px;}
-  .once-opts label{display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;}
-  .once-opts input[type=checkbox],.once-opts input[type=radio]{width:14px;height:14px;accent-color:var(--blue);cursor:pointer;}
-  .once-conditional{display:none;margin-top:8px;padding:8px 12px;background:#EAF4FB;border-radius:7px;border:1px solid var(--border);}
-  .once-conditional label.once-label{margin-bottom:4px;}
+  .once-section{width:100%;}
+  .once-table{width:100%;border-collapse:collapse;font-size:.83rem;}
+  .once-table tr.once-section-row td{background:#1B3A5C;color:white;font-weight:700;padding:7px 14px;font-size:.82rem;letter-spacing:.05em;}
+  .once-table tr.once-row{border-bottom:1px solid #E0EDF8;}
+  .once-table tr.once-row:nth-child(even) td{background:#F5F9FD;}
+  .once-table tr.once-row:hover td{background:#EAF4FB;}
+  .once-table td.once-label-cell{padding:8px 8px 8px 14px;font-weight:600;color:var(--navy);font-size:.82rem;min-width:180px;width:200px;vertical-align:middle;white-space:nowrap;}
+  .once-table td.once-label-cell .once-sub{font-size:.74rem;color:var(--grey);font-weight:400;display:block;margin-top:2px;white-space:normal;}
+  .once-table td.once-input-cell{padding:6px 10px;vertical-align:middle;}
+  .once-opts-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;}
+  .once-opts-row label{display:flex;align-items:center;gap:5px;font-size:.83rem;cursor:pointer;}
+  .once-opts-row input[type=checkbox],.once-opts-row input[type=radio]{width:14px;height:14px;accent-color:var(--blue);cursor:pointer;}
+  .once-conditional{display:none;margin-top:8px;}
+  .once-select{border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.82rem;font-family:inherit;color:var(--dark);background:white;outline:none;width:100%;max-width:240px;}
+  .once-select:focus{border-color:var(--blue);}
+  .once-text-input{border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.82rem;font-family:inherit;color:var(--dark);background:white;outline:none;width:100%;max-width:500px;}
+  .once-text-input:focus{border-color:var(--blue);}
+  .once-text-input::placeholder{color:#AABBCC;}
   .na-bg{background:#F5F5F5!important;color:#BBBBBB;text-align:center;font-size:.76rem;}
 </style>
 </head>
@@ -210,75 +218,101 @@
         <div class="mobile-day-card" id="mobileDayCard"></div>
         <!-- 放學後：整週只填一次 -->
         <div class="once-section" id="onceSection">
-          <h4>📌 三、放學後（整週只填一次）</h4>
+          <table class="once-table">
+            <tbody>
+              <tr class="once-section-row"><td colspan="2">📌 三、放學後（整週只填一次）</td></tr>
 
-          <!-- 補習 -->
-          <div class="once-item">
-            <label class="once-label">補習科目 <span class="once-sub">（可複選）</span></label>
-            <div class="once-opts" id="cramSubjectsOpts">
-              <label><input type="checkbox" value="國文/作文" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 國文/作文</label>
-              <label><input type="checkbox" value="數學" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 數學</label>
-              <label><input type="checkbox" value="自然/理化" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 自然/理化</label>
-              <label><input type="checkbox" value="社會科" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 社會科</label>
-              <label><input type="checkbox" value="英文" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 英文</label>
-            </div>
-            <div class="once-conditional" id="cramTotalWrap">
-              <label class="once-label">週一到五補習總時數</label>
-              <select id="once_cramTotal" class="t-time" style="max-width:200px;"></select>
-            </div>
-          </div>
+              <!-- 補習科目 -->
+              <tr class="once-row">
+                <td class="once-label-cell">補習科目<span class="once-sub">可複選</span></td>
+                <td class="once-input-cell">
+                  <div class="once-opts-row">
+                    <label><input type="checkbox" value="國文/作文" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 國文/作文</label>
+                    <label><input type="checkbox" value="數學" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 數學</label>
+                    <label><input type="checkbox" value="自然/理化" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 自然/理化</label>
+                    <label><input type="checkbox" value="社會科" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 社會科</label>
+                    <label><input type="checkbox" value="英文" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 英文</label>
+                  </div>
+                </td>
+              </tr>
 
-          <!-- 社團/才藝 -->
-          <div class="once-item">
-            <label class="once-label">是否參加社團或才藝班？</label>
-            <div class="once-opts">
-              <label><input type="radio" name="once_club_radio" value="是" onchange="updateOnceVis()"> 是</label>
-              <label><input type="radio" name="once_club_radio" value="否" onchange="updateOnceVis()"> 否</label>
-            </div>
-            <div class="once-conditional" id="clubTotalWrap">
-              <label class="once-label">週一到五社團/才藝班總時數</label>
-              <select id="once_clubTotal" class="t-time" style="max-width:200px;"></select>
-            </div>
-          </div>
+              <!-- 補習總時數（直接顯示） -->
+              <tr class="once-row" id="cramTotalRow">
+                <td class="once-label-cell">補習總時數<span class="once-sub">週一到五合計</span></td>
+                <td class="once-input-cell">
+                  <select id="once_cramTotal" class="once-select"></select>
+                </td>
+              </tr>
 
-          <!-- 打工 -->
-          <div class="once-item">
-            <label class="once-label">是否打工？</label>
-            <div class="once-opts">
-              <label><input type="radio" name="once_work_radio" value="有" onchange="updateOnceVis()"> 有</label>
-              <label><input type="radio" name="once_work_radio" value="沒有" onchange="updateOnceVis()"> 沒有</label>
-            </div>
-            <div class="once-conditional" id="workDetailWrap">
-              <label class="once-label">週一到五打工總時數</label>
-              <select id="once_workTotal" class="t-time" style="max-width:200px;margin-bottom:10px;"></select>
-              <label class="once-label">打工內容</label>
-              <input type="text" id="once_workType" class="t-text" placeholder="例：便利商店、餐廳外場、加油站、建築工地、夜市…" style="max-width:400px;">
-            </div>
-          </div>
+              <!-- 社團/才藝 -->
+              <tr class="once-row">
+                <td class="once-label-cell">是否參加社團或才藝班？</td>
+                <td class="once-input-cell">
+                  <div class="once-opts-row">
+                    <label><input type="radio" name="once_club_radio" value="是" onchange="updateOnceVis()"> 是</label>
+                    <label><input type="radio" name="once_club_radio" value="否" onchange="updateOnceVis()"> 否</label>
+                  </div>
+                  <div class="once-conditional" id="clubTotalWrap">
+                    <select id="once_clubTotal" class="once-select" style="margin-top:6px;"></select>
+                    <div style="font-size:.76rem;color:var(--grey);margin-top:3px;">週一到五社團/才藝班總時數</div>
+                  </div>
+                </td>
+              </tr>
 
-          <!-- 打電動/上網 -->
-          <div class="once-item">
-            <label class="once-label">週一到五每日平均上網／打電動時間 <span class="once-sub">（小時）</span></label>
-            <select id="once_gameDaily" class="t-time" style="max-width:200px;"></select>
-          </div>
-          <div class="once-item">
-            <label class="once-label">遊戲名稱／社群媒體名稱</label>
-            <input type="text" id="once_gameName" class="t-text" placeholder="例：IG、Minecraft" style="max-width:400px;">
-          </div>
+              <!-- 打工 -->
+              <tr class="once-row">
+                <td class="once-label-cell">是否打工？</td>
+                <td class="once-input-cell">
+                  <div class="once-opts-row">
+                    <label><input type="radio" name="once_work_radio" value="有" onchange="updateOnceVis()"> 有</label>
+                    <label><input type="radio" name="once_work_radio" value="沒有" onchange="updateOnceVis()"> 沒有</label>
+                  </div>
+                  <div class="once-conditional" id="workDetailWrap" style="margin-top:6px;">
+                    <select id="once_workTotal" class="once-select"></select>
+                    <div style="font-size:.76rem;color:var(--grey);margin-top:3px;margin-bottom:8px;">週一到五打工總時數</div>
+                    <input type="text" id="once_workType" class="once-text-input" placeholder="打工內容（例：便利商店、餐廳外場、加油站、建築工地、夜市…）">
+                  </div>
+                </td>
+              </tr>
 
-          <!-- 睡眠 -->
-          <div class="once-item">
-            <label class="once-label">週一到四平均幾點睡覺？</label>
-            <select id="once_sleepAvgTime" class="t-time" style="max-width:200px;"></select>
-          </div>
-          <div class="once-item">
-            <label class="once-label">週一到四平均睡幾小時？</label>
-            <select id="once_sleepAvgHours" class="t-time" style="max-width:200px;"></select>
-          </div>
-          <div class="once-item">
-            <label class="once-label">週五幾點睡覺？</label>
-            <select id="once_sleepFri" class="t-time" style="max-width:200px;"></select>
-          </div>
+              <!-- 打電動/上網 -->
+              <tr class="once-row">
+                <td class="once-label-cell">每日平均上網／打電動<span class="once-sub">週一到五平均（小時）</span></td>
+                <td class="once-input-cell">
+                  <select id="once_gameDaily" class="once-select"></select>
+                </td>
+              </tr>
+              <tr class="once-row">
+                <td class="once-label-cell">遊戲名稱／社群媒體名稱</td>
+                <td class="once-input-cell">
+                  <input type="text" id="once_gameName" class="once-text-input" placeholder="例：IG、Minecraft">
+                </td>
+              </tr>
+
+              <!-- 睡眠 -->
+              <tr class="once-row">
+                <td class="once-label-cell">週一到四平均幾點睡覺？</td>
+                <td class="once-input-cell"><select id="once_sleepAvgTime" class="once-select"></select></td>
+              </tr>
+              <tr class="once-row">
+                <td class="once-label-cell">週一到四平均睡幾小時？</td>
+                <td class="once-input-cell"><select id="once_sleepAvgHours" class="once-select"></select></td>
+              </tr>
+              <tr class="once-row">
+                <td class="once-label-cell">週五幾點睡覺？</td>
+                <td class="once-input-cell"><select id="once_sleepFri" class="once-select"></select></td>
+              </tr>
+
+              <!-- 其他休閒活動（最後一題） -->
+              <tr class="once-row">
+                <td class="once-label-cell">其他休閒活動<span class="once-sub">週一到五</span></td>
+                <td class="once-input-cell">
+                  <input type="text" id="once_leisure" class="once-text-input" placeholder="例：看書、運動、宗教活動、才藝練習…">
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -367,8 +401,7 @@ function initOnceSelects(){
 
 // 條件顯示
 function updateOnceVis(){
-  const hasCram=document.querySelectorAll(".once_cb_cramSubjects:checked").length>0;
-  document.getElementById("cramTotalWrap").style.display=hasCram?"block":"none";
+  // 補習總時數：直接顯示，不再條件控制
   const clubYes=document.querySelector('input[name="once_club_radio"][value="是"]:checked');
   document.getElementById("clubTotalWrap").style.display=clubYes?"block":"none";
   const workYes=document.querySelector('input[name="once_work_radio"][value="有"]:checked');
@@ -400,7 +433,6 @@ const WEEKDAY_ROWS=[
   {key:"lunch",label:"午餐",type:"radio-lunch",opts:["自帶便當","學校午餐","外食/訂便當","不吃"]},
   {key:"period8",label:"第八節內容",type:"radio",opts:["考試","上進度","複習","自習","無"]},
   {key:"schoolEnd",label:"放學時間",type:"timesel",rangeKey:"schoolEnd"},
-  {key:"leisure",label:"其他休閒活動",type:"text",ph:"例：看書、運動"},
 ];
 
 const WEEKEND_ROWS=[
@@ -534,6 +566,7 @@ function collectData(){
     sleepAvgTime:(document.getElementById("once_sleepAvgTime")||{}).value||"",
     sleepAvgHours:(document.getElementById("once_sleepAvgHours")||{}).value||"",
     sleepFri:(document.getElementById("once_sleepFri")||{}).value||"",
+    leisure:(document.getElementById("once_leisure")||{}).value||"",
   };
   WEEKDAY_COLS.forEach(col=>{
     WEEKDAY_ROWS.forEach(row=>{
@@ -718,8 +751,6 @@ function syncMobileToOnce(){
 function updateOnceVisMobile(){
   syncMobileToOnce();
   const mob=document.getElementById("onceSectionMobile");if(!mob)return;
-  const hasCram=mob.querySelectorAll(".once_cb_cramSubjects:checked").length>0;
-  const cw=mob.querySelector("#cramTotalWrap");if(cw)cw.style.display=hasCram?"block":"none";
   const cy=mob.querySelector('input[name="once_club_radio"][value="是"]:checked');
   const clw=mob.querySelector("#clubTotalWrap");if(clw)clw.style.display=cy?"block":"none";
   const wy=mob.querySelector('input[name="once_work_radio"][value="有"]:checked');
