@@ -5,545 +5,102 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>學生一週生活作息調查</title>
 <style>
-  :root {
-    --navy:    #1B3A5C;
-    --blue:    #2E6DA4;
-    --sky:     #5BA4D4;
-    --mint:    #3AAFA9;
-    --pale:    #EAF4FB;
-    --pale2:   #F0FAF9;
-    --cream:   #FAFBFC;
-    --border:  #C8DCF0;
-    --grey:    #6B7A8D;
-    --dark:    #1A2432;
-    --error:   #D64045;
-    --success: #2E9E6B;
-    --white:   #FFFFFF;
-    --shadow:  0 2px 12px rgba(27,58,92,0.10);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: "微軟正黑體", "Noto Sans TC", "PingFang TC", sans-serif;
-    background: #EEF4FA;
-    color: var(--dark);
-    min-height: 100vh;
-  }
-
-  /* ── Header ── */
-  .site-header {
-    background: linear-gradient(135deg, var(--navy) 0%, #2A5298 100%);
-    color: white;
-    padding: 36px 24px 28px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .site-header::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 40px,
-      rgba(255,255,255,0.03) 40px,
-      rgba(255,255,255,0.03) 80px
-    );
-  }
-  .site-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    position: relative;
-  }
-  .site-header p {
-    margin-top: 8px;
-    font-size: 0.9rem;
-    opacity: 0.8;
-    position: relative;
-  }
-
-  /* ── Progress bar ── */
-  .progress-wrap {
-    background: white;
-    padding: 14px 24px;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .progress-bar {
-    flex: 1;
-    height: 6px;
-    background: #D8E8F5;
-    border-radius: 99px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--blue), var(--mint));
-    border-radius: 99px;
-    transition: width 0.4s ease;
-    width: 0%;
-  }
-  .progress-label {
-    font-size: 0.8rem;
-    color: var(--grey);
-    white-space: nowrap;
-    min-width: 80px;
-    text-align: right;
-  }
-
-  /* ── Main layout ── */
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 24px 16px 60px;
-  }
-
-  /* ── Pages ── */
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* ── Cards ── */
-  .card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-  .card-header {
-    background: var(--navy);
-    color: white;
-    padding: 14px 20px;
-    font-size: 1rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .card-header .icon { font-size: 1.2rem; }
-  .card-body { padding: 24px 20px; }
-
-  /* ── Info card ── */
-  .info-card {
-    background: var(--pale);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    font-size: 0.88rem;
-    line-height: 1.8;
-    color: var(--navy);
-  }
-  .info-card strong { color: var(--blue); }
-
-  /* ── Basic info form ── */
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group.full { grid-column: 1 / -1; }
-  .form-group label {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--navy);
-  }
-  .form-group label .req { color: var(--error); margin-left: 2px; }
-  .form-group input,
-  .form-group select {
-    border: 1.5px solid var(--border);
-    border-radius: 7px;
-    padding: 9px 12px;
-    font-size: 0.92rem;
-    font-family: inherit;
-    color: var(--dark);
-    outline: none;
-    transition: border-color 0.2s;
-    background: white;
-  }
-  .form-group input:focus,
-  .form-group select:focus { border-color: var(--blue); }
-  .form-group input.error,
-  .form-group select.error { border-color: var(--error); }
-
-  /* ── Schedule table ── */
-  .schedule-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .schedule-table {
-    width: 100%;
-    min-width: 760px;
-    border-collapse: collapse;
-    font-size: 0.83rem;
-  }
-
-  .schedule-table th {
-    background: var(--navy);
-    color: white;
-    padding: 10px 8px;
-    text-align: center;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    position: sticky;
-    top: 0;
-    white-space: nowrap;
-  }
-  .schedule-table th:first-child {
-    background: #142C47;
-    text-align: left;
-    padding-left: 14px;
-    min-width: 130px;
-  }
-  .schedule-table th.weekend { background: #2E5F8A; }
-
-  /* Section rows */
-  .schedule-table tr.section-row td {
-    background: #1B3A5C;
-    color: white;
-    font-weight: 700;
-    padding: 7px 14px;
-    font-size: 0.82rem;
-    letter-spacing: 0.05em;
-  }
-
-  /* Data rows */
-  .schedule-table tr.data-row td {
-    border-bottom: 1px solid #E0EDF8;
-    vertical-align: middle;
-    padding: 6px 6px;
-  }
-  .schedule-table tr.data-row:nth-child(even) td { background: #F5F9FD; }
-  .schedule-table tr.data-row:hover td { background: #EAF4FB; }
-
-  .row-label {
-    padding: 6px 8px 6px 14px !important;
-    font-weight: 600;
-    color: var(--navy);
-    white-space: nowrap;
-    font-size: 0.82rem;
-    min-width: 130px;
-  }
-  .row-sublabel {
-    font-size: 0.74rem;
-    color: var(--grey);
-    font-weight: 400;
-    display: block;
-    margin-top: 2px;
-  }
-
-  /* N/A cells */
-  .na-cell {
-    background: #F0F0F0 !important;
-    color: #BBBBBB;
-    text-align: center;
-    font-size: 0.8rem;
-  }
-
-  /* ── Input types inside table ── */
-  .t-time {
-    width: 100%;
-    border: 1.5px solid var(--border);
-    border-radius: 6px;
-    padding: 5px 6px;
-    font-size: 0.82rem;
-    font-family: inherit;
-    text-align: center;
-    color: var(--dark);
-    background: white;
-    outline: none;
-    min-width: 80px;
-  }
-  .t-time:focus { border-color: var(--blue); background: var(--pale); }
-  .t-time.error { border-color: var(--error); }
-
-  /* time range: two inputs */
-  .time-range {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    justify-content: center;
-  }
-  .time-range .sep {
-    font-size: 0.75rem;
-    color: var(--grey);
-    flex-shrink: 0;
-  }
-  .time-range .t-time { min-width: 68px; }
-
-  /* checkboxes */
-  .check-group {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 2px 4px;
-  }
-  .check-group label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.78rem;
-    color: var(--dark);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .check-group input[type=checkbox] {
-    width: 13px; height: 13px;
-    accent-color: var(--blue);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  /* text input */
-  .t-text {
-    width: 100%;
-    border: 1.5px solid var(--border);
-    border-radius: 6px;
-    padding: 5px 6px;
-    font-size: 0.78rem;
-    font-family: inherit;
-    color: var(--dark);
-    background: white;
-    outline: none;
-    min-width: 80px;
-  }
-  .t-text:focus { border-color: var(--blue); background: var(--pale); }
-  .t-text::placeholder { color: #AABBCC; }
-
-  /* ── Buttons ── */
-  .btn-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 24px;
-    gap: 12px;
-  }
-  .btn {
-    border: none;
-    border-radius: 8px;
-    padding: 12px 28px;
-    font-size: 0.95rem;
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.18s;
-    letter-spacing: 0.03em;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--blue), var(--mint));
-    color: white;
-    box-shadow: 0 3px 10px rgba(46,109,164,0.3);
-  }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(46,109,164,0.35); }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-secondary {
-    background: white;
-    color: var(--grey);
-    border: 1.5px solid var(--border);
-  }
-  .btn-secondary:hover { background: var(--pale); color: var(--navy); }
-
-  .btn-submit {
-    background: linear-gradient(135deg, var(--mint), #2E9E6B);
-    color: white;
-    box-shadow: 0 3px 10px rgba(58,175,169,0.3);
-    padding: 14px 36px;
-    font-size: 1rem;
-  }
-  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(58,175,169,0.35); }
-
-  /* ── Toast / status ── */
-  .toast {
-    display: none;
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--dark);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    z-index: 9999;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-    max-width: 90vw;
-    text-align: center;
-  }
-  .toast.success { background: var(--success); }
-  .toast.error-t { background: var(--error); }
-  .toast.show { display: block; animation: fadeUp 0.3s ease; }
-  @keyframes fadeUp { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
-
-  /* ── Thank you screen ── */
-  .thankyou {
-    text-align: center;
-    padding: 60px 20px;
-  }
-  .thankyou .big-icon { font-size: 4rem; margin-bottom: 16px; }
-  .thankyou h2 { font-size: 1.6rem; color: var(--navy); margin-bottom: 10px; }
-  .thankyou p { color: var(--grey); font-size: 0.95rem; line-height: 1.7; }
-
-  /* ── Sending overlay ── */
-  .overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 9998;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-    color: white;
-    font-size: 1rem;
-  }
-  .overlay.show { display: flex; }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 4px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Validation error msg ── */
-  .field-error {
-    font-size: 0.78rem;
-    color: var(--error);
-    margin-top: 4px;
-    display: none;
-  }
-  .field-error.show { display: block; }
-
-  /* ── Weekend page note ── */
-  .page-note {
-    background: var(--pale2);
-    border-left: 4px solid var(--mint);
-    padding: 12px 16px;
-    border-radius: 0 8px 8px 0;
-    font-size: 0.86rem;
-    color: var(--navy);
-    margin-bottom: 16px;
-    line-height: 1.7;
-  }
-
-  /* ── Responsive ── */
-  @media (max-width: 600px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .site-header h1 { font-size: 1.3rem; }
-    .btn { padding: 11px 18px; font-size: 0.88rem; }
-  }
-  /* ── Day switcher（手機版） ── */
-  .day-switcher {
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    background: white;
-    border-radius: 10px;
-    padding: 10px 16px;
-    margin-bottom: 8px;
-    box-shadow: var(--shadow);
-  }
-  .day-nav {
-    background: var(--pale);
-    border: 1.5px solid var(--border);
-    border-radius: 7px;
-    width: 36px; height: 36px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    color: var(--blue);
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
-  }
-  .day-nav:disabled { opacity: 0.3; cursor: default; }
-  .day-nav:not(:disabled):hover { background: var(--border); }
-  .day-label {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--navy);
-    letter-spacing: 0.05em;
-  }
-  .day-dots {
-    display: none;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--border);
-    transition: background 0.2s;
-    cursor: pointer;
-  }
-  .dot.active { background: var(--blue); }
-
-  @media (max-width: 700px) {
-    .day-switcher { display: flex; }
-    .day-dots     { display: flex; }
-    /* 手機版隱藏表格，改用單日卡片 */
-    .schedule-wrap table { display: none; }
-    .mobile-day-card { display: block !important; }
-  }
-
-  /* 手機單日卡片 */
-  .mobile-day-card {
-    display: none;
-  }
-  .mobile-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 10px 16px;
-    border-bottom: 1px solid #EDF3FA;
-    gap: 12px;
-  }
-  .mobile-row:last-child { border-bottom: none; }
-  .mobile-row-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--navy);
-    min-width: 100px;
-    padding-top: 4px;
-    flex-shrink: 0;
-  }
-  .mobile-row-label .row-sublabel {
-    font-size: 0.74rem;
-    color: var(--grey);
-    font-weight: 400;
-    display: block;
-    margin-top: 2px;
-  }
-  .mobile-row-input {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  .mobile-row-input select,
-  .mobile-row-input input[type=text] {
-    width: 100%;
-    max-width: 200px;
-  }
-  .mobile-section-header {
-    background: var(--navy);
-    color: white;
-    font-weight: 700;
-    font-size: 0.82rem;
-    padding: 7px 16px;
-    letter-spacing: 0.05em;
-  }
+  :root { --navy:#1B3A5C;--blue:#2E6DA4;--sky:#5BA4D4;--mint:#3AAFA9;--pale:#EAF4FB;--pale2:#F0FAF9;--border:#C8DCF0;--grey:#6B7A8D;--dark:#1A2432;--error:#D64045;--success:#2E9E6B;--white:#FFFFFF;--shadow:0 2px 12px rgba(27,58,92,0.10); }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"微軟正黑體","Noto Sans TC","PingFang TC",sans-serif;background:#EEF4FA;color:var(--dark);min-height:100vh;}
+  .site-header{background:linear-gradient(135deg,var(--navy) 0%,#2A5298 100%);color:white;padding:36px 24px 28px;text-align:center;position:relative;overflow:hidden;}
+  .site-header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,0.03) 40px,rgba(255,255,255,0.03) 80px);}
+  .site-header h1{font-size:1.75rem;font-weight:700;letter-spacing:.05em;position:relative;}
+  .site-header p{margin-top:8px;font-size:.9rem;opacity:.8;position:relative;}
+  .progress-wrap{background:white;padding:14px 24px;box-shadow:var(--shadow);position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:14px;}
+  .progress-bar{flex:1;height:6px;background:#D8E8F5;border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--mint));border-radius:99px;transition:width .4s ease;width:0%;}
+  .progress-label{font-size:.8rem;color:var(--grey);white-space:nowrap;min-width:80px;text-align:right;}
+  .container{max-width:1100px;margin:0 auto;padding:24px 16px 60px;}
+  .page{display:none;}.page.active{display:block;}
+  .card{background:white;border-radius:12px;box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
+  .card-header{background:var(--navy);color:white;padding:14px 20px;font-size:1rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+  .card-body{padding:24px 20px;}
+  .info-card{background:var(--pale);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;font-size:.88rem;line-height:1.8;color:var(--navy);}
+  .info-card strong{color:var(--blue);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group.full{grid-column:1/-1;}
+  .form-group label{font-size:.88rem;font-weight:600;color:var(--navy);}
+  .form-group label .req{color:var(--error);margin-left:2px;}
+  .form-group input,.form-group select{border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;font-size:.92rem;font-family:inherit;color:var(--dark);outline:none;transition:border-color .2s;background:white;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--blue);}
+  .form-group input.error,.form-group select.error{border-color:var(--error);}
+  .schedule-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .schedule-table{width:100%;min-width:760px;border-collapse:collapse;font-size:.83rem;}
+  .schedule-table th{background:var(--navy);color:white;padding:10px 8px;text-align:center;font-weight:600;letter-spacing:.04em;position:sticky;top:0;white-space:nowrap;}
+  .schedule-table th:first-child{background:#142C47;text-align:left;padding-left:14px;min-width:140px;}
+  .schedule-table th.weekend{background:#2E5F8A;}
+  .schedule-table tr.section-row td{background:#1B3A5C;color:white;font-weight:700;padding:7px 14px;font-size:.82rem;letter-spacing:.05em;}
+  .schedule-table tr.data-row td{border-bottom:1px solid #E0EDF8;vertical-align:middle;padding:6px 6px;}
+  .schedule-table tr.data-row:nth-child(even) td{background:#F5F9FD;}
+  .schedule-table tr.data-row:hover td{background:#EAF4FB;}
+  .row-label{padding:6px 8px 6px 14px!important;font-weight:600;color:var(--navy);white-space:nowrap;font-size:.82rem;min-width:140px;}
+  .row-sublabel{font-size:.74rem;color:var(--grey);font-weight:400;display:block;margin-top:2px;}
+  .t-time{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:5px 6px;font-size:.82rem;font-family:inherit;text-align:center;color:var(--dark);background:white;outline:none;min-width:80px;}
+  .t-time:focus{border-color:var(--blue);background:var(--pale);}
+  .check-group{display:flex;flex-direction:column;gap:3px;padding:2px 4px;}
+  .check-group label{display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--dark);cursor:pointer;white-space:nowrap;}
+  .check-group input[type=checkbox]{width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
+  .t-text{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:5px 6px;font-size:.78rem;font-family:inherit;color:var(--dark);background:white;outline:none;min-width:80px;}
+  .t-text:focus{border-color:var(--blue);background:var(--pale);}
+  .t-text::placeholder{color:#AABBCC;}
+  .btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:12px;}
+  .btn{border:none;border-radius:8px;padding:12px 28px;font-size:.95rem;font-family:inherit;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.03em;}
+  .btn-primary{background:linear-gradient(135deg,var(--blue),var(--mint));color:white;box-shadow:0 3px 10px rgba(46,109,164,.3);}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(46,109,164,.35);}
+  .btn-secondary{background:white;color:var(--grey);border:1.5px solid var(--border);}
+  .btn-secondary:hover{background:var(--pale);color:var(--navy);}
+  .btn-submit{background:linear-gradient(135deg,var(--mint),#2E9E6B);color:white;box-shadow:0 3px 10px rgba(58,175,169,.3);padding:14px 36px;font-size:1rem;}
+  .btn-submit:hover{transform:translateY(-1px);}
+  .toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:white;padding:12px 24px;border-radius:8px;font-size:.9rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.25);max-width:90vw;text-align:center;}
+  .toast.success{background:var(--success);}.toast.error-t{background:var(--error);}
+  .toast.show{display:block;animation:fadeUp .3s ease;}
+  @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+  .thankyou{text-align:center;padding:60px 20px;}
+  .thankyou .big-icon{font-size:4rem;margin-bottom:16px;}
+  .thankyou h2{font-size:1.6rem;color:var(--navy);margin-bottom:10px;}
+  .thankyou p{color:var(--grey);font-size:.95rem;line-height:1.7;}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:white;font-size:1rem;}
+  .overlay.show{display:flex;}
+  .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .field-error{font-size:.78rem;color:var(--error);margin-top:4px;display:none;}
+  .field-error.show{display:block;}
+  .page-note{background:var(--pale2);border-left:4px solid var(--mint);padding:12px 16px;border-radius:0 8px 8px 0;font-size:.86rem;color:var(--navy);margin-bottom:16px;line-height:1.7;}
+  @media(max-width:600px){.form-grid{grid-template-columns:1fr;}.site-header h1{font-size:1.3rem;}.btn{padding:11px 18px;font-size:.88rem;}}
+  .day-switcher{display:none;align-items:center;justify-content:space-between;background:white;border-radius:10px;padding:10px 16px;margin-bottom:8px;box-shadow:var(--shadow);}
+  .day-nav{background:var(--pale);border:1.5px solid var(--border);border-radius:7px;width:36px;height:36px;font-size:1.1rem;cursor:pointer;color:var(--blue);display:flex;align-items:center;justify-content:center;transition:background .15s;}
+  .day-nav:disabled{opacity:.3;cursor:default;}.day-nav:not(:disabled):hover{background:var(--border);}
+  .day-label{font-size:1.1rem;font-weight:700;color:var(--navy);letter-spacing:.05em;}
+  .day-dots{display:none;justify-content:center;gap:8px;margin-bottom:12px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .2s;cursor:pointer;}
+  .dot.active{background:var(--blue);}
+  @media(max-width:700px){.day-switcher{display:flex;}.day-dots{display:flex;}.schedule-wrap table{display:none;}.mobile-day-card{display:block!important;}}
+  .mobile-day-card{display:none;}
+  .mobile-row{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #EDF3FA;gap:12px;}
+  .mobile-row:last-child{border-bottom:none;}
+  .mobile-row-label{font-size:.85rem;font-weight:600;color:var(--navy);min-width:110px;padding-top:4px;flex-shrink:0;}
+  .mobile-row-label .row-sublabel{font-size:.74rem;color:var(--grey);font-weight:400;display:block;margin-top:2px;}
+  .mobile-row-input{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px;}
+  .mobile-row-input select,.mobile-row-input input[type=text]{width:100%;max-width:220px;}
+  .mobile-section-header{background:var(--navy);color:white;font-weight:700;font-size:.82rem;padding:7px 16px;letter-spacing:.05em;}
+  .once-section{background:#F0F8FF;border-left:4px solid var(--blue);padding:16px 20px;margin:12px 0;border-radius:0 8px 8px 0;}
+  .once-section h4{font-size:.9rem;font-weight:700;color:var(--navy);margin-bottom:12px;}
+  .once-item{margin-bottom:14px;}
+  .once-item label.once-label{font-size:.85rem;font-weight:600;color:var(--navy);display:block;margin-bottom:6px;}
+  .once-item label.once-label .once-sub{font-size:.76rem;color:var(--grey);font-weight:400;margin-left:6px;}
+  .once-opts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px;}
+  .once-opts label{display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;}
+  .once-opts input[type=checkbox],.once-opts input[type=radio]{width:14px;height:14px;accent-color:var(--blue);cursor:pointer;}
+  .once-conditional{display:none;margin-top:8px;padding:8px 12px;background:#EAF4FB;border-radius:7px;border:1px solid var(--border);}
+  .once-conditional label.once-label{margin-bottom:4px;}
+  .na-bg{background:#F5F5F5!important;color:#BBBBBB;text-align:center;font-size:.76rem;}
 </style>
 </head>
 <body>
@@ -560,16 +117,13 @@
 
 <div class="container">
 
-  <!-- ══════════════════════════════════
-       PAGE 1：基本資料
-  ══════════════════════════════════ -->
+  <!-- PAGE 1 -->
   <div class="page active" id="page1">
     <div class="info-card">
       國家人權委員會為了解學生休息休閒等發展權利的情形，希望邀請您填寫一週作息。包括睡眠、補習、休閒等時間分配。<br>
       請根據<strong>上週的實際情況</strong>填寫，不需要填寫「理想中」的狀況。全部填完約 5–8 分鐘。<br>
       資料僅供研究統計使用，不會對外公開，謝謝您的幫忙！
     </div>
-
     <div class="card">
       <div class="card-header"><span class="icon">👤</span> 基本資料</div>
       <div class="card-body">
@@ -583,40 +137,18 @@
             <label>就讀學校所在縣市 <span class="req">*</span></label>
             <select id="f_county">
               <option value="">── 請選擇 ──</option>
-              <option>臺北市</option>
-              <option>新北市</option>
-              <option>桃園市</option>
-              <option>臺中市</option>
-              <option>臺南市</option>
-              <option>高雄市</option>
-              <option>基隆市</option>
-              <option>新竹市</option>
-              <option>嘉義市</option>
-              <option>新竹縣</option>
-              <option>苗栗縣</option>
-              <option>彰化縣</option>
-              <option>南投縣</option>
-              <option>雲林縣</option>
-              <option>嘉義縣</option>
-              <option>屏東縣</option>
-              <option>宜蘭縣</option>
-              <option>花蓮縣</option>
-              <option>臺東縣</option>
-              <option>澎湖縣</option>
-              <option>金門縣</option>
-              <option>連江縣</option>
+              <option>臺北市</option><option>新北市</option><option>桃園市</option><option>臺中市</option><option>臺南市</option><option>高雄市</option>
+              <option>基隆市</option><option>新竹市</option><option>嘉義市</option><option>新竹縣</option><option>苗栗縣</option><option>彰化縣</option>
+              <option>南投縣</option><option>雲林縣</option><option>嘉義縣</option><option>屏東縣</option><option>宜蘭縣</option><option>花蓮縣</option>
+              <option>臺東縣</option><option>澎湖縣</option><option>金門縣</option><option>連江縣</option>
             </select>
             <div class="field-error" id="e_county">請選擇就讀學校所在縣市</div>
           </div>
           <div class="form-group">
             <label>學校類型 <span class="req">*</span></label>
             <div style="display:flex;gap:20px;margin-top:6px;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:7px;font-weight:400;cursor:pointer;">
-                <input type="radio" name="schoolType" value="公立" id="st_public" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;"> 公立
-              </label>
-              <label style="display:flex;align-items:center;gap:7px;font-weight:400;cursor:pointer;">
-                <input type="radio" name="schoolType" value="私立" id="st_private" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;"> 私立
-              </label>
+              <label style="display:flex;align-items:center;gap:7px;font-weight:400;cursor:pointer;"><input type="radio" name="schoolType" value="公立" id="st_public" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;"> 公立</label>
+              <label style="display:flex;align-items:center;gap:7px;font-weight:400;cursor:pointer;"><input type="radio" name="schoolType" value="私立" id="st_private" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;"> 私立</label>
             </div>
             <div class="field-error" id="e_schooltype">請選擇學校類型</div>
           </div>
@@ -624,23 +156,15 @@
             <label>年級 <span class="req">*</span></label>
             <select id="f_grade">
               <option value="">── 請選擇 ──</option>
-              <option>7年級（國一）</option>
-              <option>8年級（國二）</option>
-              <option>9年級（國三）</option>
-              <option>高中一年級</option>
-              <option>高中二年級</option>
-              <option>高中三年級</option>
+              <option>7年級（國一）</option><option>8年級（國二）</option><option>9年級（國三）</option>
+              <option>高中一年級</option><option>高中二年級</option><option>高中三年級</option>
             </select>
             <div class="field-error" id="e_grade">請選擇年級</div>
           </div>
           <div class="form-group">
             <label>性別</label>
             <select id="f_gender">
-              <option value="">── 請選擇 ──</option>
-              <option>男</option>
-              <option>女</option>
-              <option>非二元性別／其他</option>
-              <option>不想回答</option>
+              <option value="">── 請選擇 ──</option><option>男</option><option>女</option><option>非二元性別／其他</option><option>不想回答</option>
             </select>
           </div>
           <div class="form-group full">
@@ -656,52 +180,106 @@
         </div>
       </div>
     </div>
-
-    <div class="btn-row">
-      <div></div>
-      <button class="btn btn-primary" onclick="goPage(2)">下一步：平日作息 →</button>
-    </div>
+    <div class="btn-row"><div></div><button class="btn btn-primary" onclick="goPage(2)">下一步：平日作息 →</button></div>
   </div>
 
-  <!-- ══════════════════════════════════
-       PAGE 2：平日（一～五）
-  ══════════════════════════════════ -->
+  <!-- PAGE 2 -->
   <div class="page" id="page2">
     <div class="page-note">
       📅 <strong>平日作息（星期一～五）</strong><br>
-      下拉選單選擇時間，若當天無該活動請留空即可。
+      下拉選單選擇時間，若當天無該活動請留空即可。<br>
+      📌 第三大項「放學後」的題目為<strong>整週填一次</strong>（不用每天重複填）。
     </div>
-
-    <!-- 手機版：星期切換列 -->
     <div class="day-switcher" id="daySwitcher">
       <button class="day-nav" id="dayPrev" onclick="switchDay(-1)">&#8592;</button>
       <span class="day-label" id="dayLabel">星期一</span>
       <button class="day-nav" id="dayNext" onclick="switchDay(1)">&#8594;</button>
     </div>
-    <!-- 手機版：進度點 -->
     <div class="day-dots" id="dayDots">
-      <span class="dot active" data-d="0"></span>
-      <span class="dot" data-d="1"></span>
-      <span class="dot" data-d="2"></span>
-      <span class="dot" data-d="3"></span>
-      <span class="dot" data-d="4"></span>
+      <span class="dot active" data-d="0"></span><span class="dot" data-d="1"></span><span class="dot" data-d="2"></span><span class="dot" data-d="3"></span><span class="dot" data-d="4"></span>
     </div>
-
     <div class="card">
       <div class="card-header"><span class="icon">🗓</span> 平日一週作息表</div>
       <div class="card-body" style="padding:0">
         <div class="schedule-wrap">
           <table class="schedule-table" id="weekdayTable">
-            <thead>
-              <tr>
-                <th>活動項目</th>
-                <th>星期一</th><th>星期二</th><th>星期三</th><th>星期四</th><th>星期五</th>
-              </tr>
-            </thead>
+            <thead><tr><th>活動項目</th><th>星期一</th><th>星期二</th><th>星期三</th><th>星期四</th><th>星期五</th></tr></thead>
             <tbody id="weekdayBody"></tbody>
           </table>
-        </div><!-- /schedule-wrap -->
+        </div>
         <div class="mobile-day-card" id="mobileDayCard"></div>
+        <!-- 放學後：整週只填一次 -->
+        <div class="once-section" id="onceSection">
+          <h4>📌 三、放學後（整週只填一次）</h4>
+
+          <!-- 補習 -->
+          <div class="once-item">
+            <label class="once-label">補習科目 <span class="once-sub">（可複選）</span></label>
+            <div class="once-opts" id="cramSubjectsOpts">
+              <label><input type="checkbox" value="國文/作文" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 國文/作文</label>
+              <label><input type="checkbox" value="數學" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 數學</label>
+              <label><input type="checkbox" value="自然/理化" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 自然/理化</label>
+              <label><input type="checkbox" value="社會科" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 社會科</label>
+              <label><input type="checkbox" value="英文" class="once_cb_cramSubjects" onchange="updateOnceVis()"> 英文</label>
+            </div>
+            <div class="once-conditional" id="cramTotalWrap">
+              <label class="once-label">週一到五補習總時數</label>
+              <select id="once_cramTotal" class="t-time" style="max-width:200px;"></select>
+            </div>
+          </div>
+
+          <!-- 社團/才藝 -->
+          <div class="once-item">
+            <label class="once-label">是否參加社團或才藝班？</label>
+            <div class="once-opts">
+              <label><input type="radio" name="once_club_radio" value="是" onchange="updateOnceVis()"> 是</label>
+              <label><input type="radio" name="once_club_radio" value="否" onchange="updateOnceVis()"> 否</label>
+            </div>
+            <div class="once-conditional" id="clubTotalWrap">
+              <label class="once-label">週一到五社團/才藝班總時數</label>
+              <select id="once_clubTotal" class="t-time" style="max-width:200px;"></select>
+            </div>
+          </div>
+
+          <!-- 打工 -->
+          <div class="once-item">
+            <label class="once-label">是否打工？</label>
+            <div class="once-opts">
+              <label><input type="radio" name="once_work_radio" value="有" onchange="updateOnceVis()"> 有</label>
+              <label><input type="radio" name="once_work_radio" value="沒有" onchange="updateOnceVis()"> 沒有</label>
+            </div>
+            <div class="once-conditional" id="workDetailWrap">
+              <label class="once-label">週一到五打工總時數</label>
+              <select id="once_workTotal" class="t-time" style="max-width:200px;margin-bottom:10px;"></select>
+              <label class="once-label">打工內容</label>
+              <input type="text" id="once_workType" class="t-text" placeholder="例：便利商店、餐廳外場、加油站、建築工地、夜市…" style="max-width:400px;">
+            </div>
+          </div>
+
+          <!-- 打電動/上網 -->
+          <div class="once-item">
+            <label class="once-label">週一到五每日平均上網／打電動時間 <span class="once-sub">（小時）</span></label>
+            <select id="once_gameDaily" class="t-time" style="max-width:200px;"></select>
+          </div>
+          <div class="once-item">
+            <label class="once-label">遊戲名稱／社群媒體名稱</label>
+            <input type="text" id="once_gameName" class="t-text" placeholder="例：IG、Minecraft" style="max-width:400px;">
+          </div>
+
+          <!-- 睡眠 -->
+          <div class="once-item">
+            <label class="once-label">週一到四平均幾點睡覺？</label>
+            <select id="once_sleepAvgTime" class="t-time" style="max-width:200px;"></select>
+          </div>
+          <div class="once-item">
+            <label class="once-label">週一到四平均睡幾小時？</label>
+            <select id="once_sleepAvgHours" class="t-time" style="max-width:200px;"></select>
+          </div>
+          <div class="once-item">
+            <label class="once-label">週五幾點睡覺？</label>
+            <select id="once_sleepFri" class="t-time" style="max-width:200px;"></select>
+          </div>
+        </div>
       </div>
     </div>
     <div class="btn-row">
@@ -710,39 +288,27 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       PAGE 3：週末（六、日）
-  ══════════════════════════════════ -->
+  <!-- PAGE 3 -->
   <div class="page" id="page3">
     <div class="page-note">
       🏖 <strong>週末作息（星期六、日）</strong><br>
       補習請點「＋ 新增一科補習」依科目分開填寫開始與結束時間。<br>
-      📌 除補習外，其他活動（才藝班/社團、寫作業/唸書、打電動/上社群）請以<strong>當天總時數</strong>填寫，例如：共花了 2 小時，請選「2 小時」。
+      📌 除補習外，其他活動（才藝班/社團、寫作業/唸書、打電動/上社群）請以<strong>當天總時數</strong>填寫。
     </div>
-
-    <!-- 手機版：星期切換列 -->
     <div class="day-switcher" id="weekendSwitcher">
       <button class="day-nav" id="weekendPrev" onclick="switchWeekendDay(-1)">&#8592;</button>
       <span class="day-label" id="weekendLabel">星期六</span>
       <button class="day-nav" id="weekendNext" onclick="switchWeekendDay(1)">&#8594;</button>
     </div>
     <div class="day-dots" id="weekendDots">
-      <span class="dot active" data-w="0"></span>
-      <span class="dot" data-w="1"></span>
+      <span class="dot active" data-w="0"></span><span class="dot" data-w="1"></span>
     </div>
-
     <div class="card">
       <div class="card-header"><span class="icon">🌤</span> 週末作息表</div>
       <div class="card-body" style="padding:0">
         <div class="schedule-wrap">
           <table class="schedule-table" id="weekendTable">
-            <thead>
-              <tr>
-                <th>活動項目</th>
-                <th class="weekend">星期六</th>
-                <th class="weekend">星期日</th>
-              </tr>
-            </thead>
+            <thead><tr><th>活動項目</th><th class="weekend">星期六</th><th class="weekend">星期日</th></tr></thead>
             <tbody id="weekendBody"></tbody>
           </table>
         </div>
@@ -755,1351 +321,498 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       PAGE 4：感謝頁
-  ══════════════════════════════════ -->
+  <!-- PAGE 4 -->
   <div class="page" id="page4">
-    <div class="card">
-      <div class="thankyou">
-        <div class="big-icon">🎉</div>
-        <h2>感謝您的填寫！</h2>
-        <p>您的作息資料已成功送出。<br>問卷資料僅供研究統計，不會對外公開，謝謝您的幫忙！</p>
-      </div>
-    </div>
+    <div class="card"><div class="thankyou"><div class="big-icon">🎉</div><h2>感謝您的填寫！</h2><p>您的作息資料已成功送出。<br>問卷資料僅供研究統計，不會對外公開，謝謝您的幫忙！</p></div></div>
   </div>
 
-  <!-- ══════════════════════════════════
-       PAGE 5：已填寫過
-  ══════════════════════════════════ -->
+  <!-- PAGE 5 -->
   <div class="page" id="page5">
-    <div class="card">
-      <div class="thankyou">
-        <div class="big-icon">✅</div>
-        <h2>您已完成填寫</h2>
-        <p>我們已收到您的問卷，請勿重複送出。<br>感謝您協助國家人權委員會的研究！</p>
-        <p style="margin-top:16px;font-size:0.82rem;color:#AAA;">如果您認為這是錯誤，請聯絡研究人員重置。</p>
-      </div>
-    </div>
+    <div class="card"><div class="thankyou"><div class="big-icon">✅</div><h2>您已完成填寫</h2><p>我們已收到您的問卷，請勿重複送出。<br>感謝您協助國家人權委員會的研究！</p><p style="margin-top:16px;font-size:.82rem;color:#AAA;">如果您認為這是錯誤，請聯絡研究人員重置。</p></div></div>
   </div>
 
-</div><!-- /container -->
-
-<!-- Overlay -->
-<div class="overlay" id="overlay">
-  <div class="spinner"></div>
-  <div>資料送出中，請稍候…</div>
 </div>
 
-<!-- Toast -->
+<div class="overlay" id="overlay"><div class="spinner"></div><div>資料送出中，請稍候…</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════
-// 【設定區】將下方 URL 換成你的 Google Apps Script 網址
-// ═══════════════════════════════════════════
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLid4DwD6w68B9_JsOg9kTWXFdbOUwKZmvZNzlKG_6JlBDTXyGLD5DLIKv15VF3cC1DA/exec";
 
-// ════════════════════════════════════════════
-// 時間選項產生器（24小時制，每15分鐘）
-// ════════════════════════════════════════════
-function genTimes(startH, endH) {
-  // startH, endH 為小時數（可跨日，endH 可 > 23）
-  const opts = [""];
-  for (let h = startH; h <= endH; h++) {
-    const hh = (h % 24).toString().padStart(2, "0");
-    ["00","10","20","30","40","50"].forEach(mm => {
-      opts.push(`${hh}:${mm}`);
-    });
-  }
-  return opts;
-}
+// ── 時間產生器 ──
+function genTimes(startH,endH){const o=[""];for(let h=startH;h<=endH;h++){const hh=(h%24).toString().padStart(2,"0");["00","10","20","30","40","50"].forEach(mm=>o.push(`${hh}:${mm}`));}return o;}
+function genTimesFrom(s,e){const o=[""];const[sh,sm]=s.split(":").map(Number);const[eh,em]=e.split(":").map(Number);const sM=sh*60+sm,eM=eh*60+em;for(let m=sM;m<=eM;m+=10){const hh=(Math.floor(m/60)%24).toString().padStart(2,"0");const mm=(m%60).toString().padStart(2,"0");o.push(`${hh}:${mm}`);}return o;}
+function genDuration(){const o=["── 選擇 ──"];for(let m=30;m<=480;m+=30){const h=Math.floor(m/60),mn=m%60;o.push(h===0?`${mn} 分鐘`:mn===0?`${h} 小時`:`${h} 小時 ${mn} 分鐘`);}o.push("8 小時以上");return o;}
+function genStepHr(max){const o=["── 選擇 ──"];for(let m=60;m<=max;m+=30){const h=Math.floor(m/60),mn=m%60;o.push(mn===0?`${h} 小時`:`${h} 小時 ${mn} 分鐘`);}return o;}
+function genHrOnly(max){const o=["── 選擇 ──"];for(let h=1;h<=max;h++)o.push(`${h} 小時`);return o;}
 
-// 支援非整點起始/結束（格式 "HH:MM"，endH 可為 "30:00" 代表跨日06:00）
-function genTimesFrom(startStr, endStr) {
-  const opts = [""];
-  const [sh, sm] = startStr.split(":").map(Number);
-  const [eh, em] = endStr.split(":").map(Number);
-  const startMin = sh * 60 + sm;
-  const endMin   = eh * 60 + em;
-  for (let m = startMin; m <= endMin; m += 10) {
-    const hh = (Math.floor(m / 60) % 24).toString().padStart(2, "0");
-    const mm = (m % 60).toString().padStart(2, "0");
-    opts.push(`${hh}:${mm}`);
-  }
-  return opts;
-}
-
-// 總時數選項：30分鐘～8小時，每30分鐘一項，最後加「8小時以上」
-function genDuration() {
-  const opts = ["── 選擇 ──"];
-  for (let m = 30; m <= 480; m += 30) {
-    const h = Math.floor(m / 60);
-    const min = m % 60;
-    if (h === 0) opts.push(`${min} 分鐘`);
-    else if (min === 0) opts.push(`${h} 小時`);
-    else opts.push(`${h} 小時 ${min} 分鐘`);
-  }
-  opts.push("8 小時以上");
-  return opts;
-}
-
-// 各題目的時間範圍設定
-const TIME_RANGES = {
-  wakeup:          genTimesFrom("04:30", "10:00"),  // 起床 04:30～10:00
-  leave:           genTimes(5, 10),                  // 出門 05:00～10:50
-  arrive:          genTimesFrom("06:30", "12:00"),   // 到校 06:30～12:00
-  schoolEnd:       genTimesFrom("15:00", "22:00"),   // 放學 15:00～22:00
-  sleep:           genTimes(0, 23),                  // 睡覺 全天 00:00～23:50
-  cram:            genTimesFrom("15:30", "22:00"),   // 平日補習 15:30～22:00
-  schoolAfternoon: genTimesFrom("15:00", "22:00"),   // 留校/課輔/才藝 15:00～22:00
-  afternoon:       genTimesFrom("15:30", "30:00"),   // 打工 15:30～06:00（跨日）
-  weekendCram:     genTimesFrom("08:00", "22:00"),   // 週末補習/才藝 08:00～22:00
-  allDay:          genTimes(0, 23),                  // 寫作業/打電動/睡覺 全天
-  wakeupWeekend:   genTimes(0, 23),                  // 週末起床 全天
-  hwGame:          genTimesFrom("15:00", "30:00"),   // 平日寫作業/打電動 15:00～06:00
-  sleepWeekday:    genTimesFrom("18:00", "30:00"),   // 平日睡覺 18:00～06:00
-  crossday:        genTimesFrom("15:00", "31:00"),   // 跨日 15:00～07:00（次日）
-  duration:        genDuration(),                    // 總時數 30分～8小時以上
-  range:           genTimes(6, 27),                  // 通用 06:00～03:50
+const TIME_RANGES={
+  wakeup:genTimesFrom("04:30","10:00"),leave:genTimes(5,10),arrive:genTimesFrom("06:30","12:00"),
+  schoolEnd:genTimesFrom("15:00","22:00"),sleepWeekday:genTimesFrom("18:00","30:00"),
+  weekendCram:genTimesFrom("08:00","22:00"),allDay:genTimes(0,23),wakeupWeekend:genTimes(0,23),
+  sleep:genTimes(0,23),duration:genDuration(),range:genTimes(6,27),
 };
 
-function makeTimeSelect(id, rangeKey) {
-  const sel = document.createElement("select");
-  sel.className = "t-time";
-  sel.id = id;
-  sel.name = id;
-  const times = TIME_RANGES[rangeKey] || TIME_RANGES.range;
-  times.forEach(t => {
-    const opt = document.createElement("option");
-    opt.value = t;
-    // duration 陣列第一項是說明文字，其他直接顯示
-    opt.textContent = (t === "" ) ? "── 選擇 ──" : t;
-    sel.appendChild(opt);
-  });
+// 填充整週一次用的 select
+function fillSelect(id,opts){const el=document.getElementById(id);if(!el)return;el.innerHTML="";opts.forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t;el.appendChild(o);});}
+function initOnceSelects(){
+  fillSelect("once_cramTotal",genStepHr(1200));   // 1h~20h 每30min
+  fillSelect("once_clubTotal",genStepHr(960));    // 1h~16h 每30min
+  fillSelect("once_workTotal",genHrOnly(20));     // 1h~20h 每1h
+  fillSelect("once_gameDaily",genHrOnly(30));     // 1h~30h 每1h
+  fillSelect("once_sleepAvgTime",TIME_RANGES.sleepWeekday);
+  fillSelect("once_sleepAvgHours",genStepHr(720)); // 1h~12h 每30min
+  fillSelect("once_sleepFri",TIME_RANGES.sleepWeekday);
+}
+
+// 條件顯示
+function updateOnceVis(){
+  const hasCram=document.querySelectorAll(".once_cb_cramSubjects:checked").length>0;
+  document.getElementById("cramTotalWrap").style.display=hasCram?"block":"none";
+  const clubYes=document.querySelector('input[name="once_club_radio"][value="是"]:checked');
+  document.getElementById("clubTotalWrap").style.display=clubYes?"block":"none";
+  const workYes=document.querySelector('input[name="once_work_radio"][value="有"]:checked');
+  document.getElementById("workDetailWrap").style.display=workYes?"block":"none";
+}
+
+function makeTimeSelect(id,rangeKey){
+  const sel=document.createElement("select");sel.className="t-time";sel.id=id;sel.name=id;
+  const times=TIME_RANGES[rangeKey]||TIME_RANGES.range;
+  times.forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t===""?"── 選擇 ──":t;sel.appendChild(o);});
   return sel;
 }
-
-function makeTimeRangeCell(col, key, rangeKey = "range") {
-  const wrap = document.createElement("div");
-  wrap.style.cssText = "display:flex;flex-direction:column;gap:3px;align-items:center;";
-  const s = makeTimeSelect(`${col}_${key}Start`, rangeKey);
-  const sep = document.createElement("span");
-  sep.textContent = "↓";
-  sep.style.cssText = "font-size:0.7rem;color:#9AA;";
-  const e = makeTimeSelect(`${col}_${key}End`, rangeKey);
-  wrap.appendChild(s);
-  wrap.appendChild(sep);
-  wrap.appendChild(e);
-  return wrap;
+function makeTimeRangeCell(col,key,rangeKey="range"){
+  const wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:3px;align-items:center;";
+  const s=makeTimeSelect(`${col}_${key}Start`,rangeKey);
+  const sep=document.createElement("span");sep.textContent="↓";sep.style.cssText="font-size:.7rem;color:#9AA;";
+  const e=makeTimeSelect(`${col}_${key}End`,rangeKey);
+  wrap.appendChild(s);wrap.appendChild(sep);wrap.appendChild(e);return wrap;
 }
 
-// ════════════════════════════════════════════
-// 表格結構定義
-// ════════════════════════════════════════════
-const WEEKDAY_ROWS = [
-  { type: "section", label: "一、早晨" },
-  { key: "wakeup",      label: "起床時間",   type: "timesel",   rangeKey: "wakeup" },
-  { key: "leave",       label: "出門時間",   type: "timesel",   rangeKey: "leave" },
-  { key: "arrive",      label: "到校時間",   type: "timesel",   rangeKey: "arrive" },
-  { key: "morningExam", label: "早自習", sub: "考試科目（無則留空）", type: "text", ph: "科目名稱" },
-
-  { type: "section", label: "二、在校" },
-  { key: "lunch",       label: "午餐",         type: "radio-lunch",  opts: ["自帶便當","學校午餐","外食/訂便當","不吃"] },
-  { key: "period8",     label: "第八節內容",    type: "radio",        opts: ["考試","上進度","複習","自習","無"] },
-  { key: "schoolEnd",   label: "放學時間",      type: "timesel",      rangeKey: "schoolEnd" },
-
-  { type: "section", label: "三、放學後" },
-  { key: "cram",     label: "補習",         type: "timerange+check", rangeKey: "cram" },
-  { key: "study",    label: "課輔/留校自習", type: "timerange",       rangeKey: "schoolAfternoon" },
-  { key: "club",     label: "才藝班/社團",  type: "timerange",       rangeKey: "schoolAfternoon" },
-  { key: "work",     label: "打工",         type: "timerange",       rangeKey: "crossday" },
-  { key: "workType", label: "打工內容",     type: "text", ph: "例：超商，若無留空" },
-  { key: "hw",       label: "寫作業/唸書",  type: "timerange",       rangeKey: "crossday" },
-  { key: "game",     label: "打電動/上社群", type: "timerange",      rangeKey: "crossday" },
-  { key: "gameName", label: "遊戲/社群名稱", type: "merged-text", ph: "例：IG、Minecraft（整週填一次）" },
-  { key: "leisure",  label: "其他休閒活動", type: "text", ph: "例：看書、運動" },
-  { key: "sleep",    label: "睡覺時間",     type: "timesel",   rangeKey: "sleepWeekday" },
+// ── 表格定義（每天各填的部分）──
+const WEEKDAY_ROWS=[
+  {type:"section",label:"一、早晨"},
+  {key:"wakeup",label:"起床時間",type:"timesel",rangeKey:"wakeup"},
+  {key:"leave",label:"出門時間",type:"timesel",rangeKey:"leave"},
+  {key:"arrive",label:"到校時間",type:"timesel",rangeKey:"arrive"},
+  {key:"morningExam",label:"早自習",sub:"考試科目（無則留空）",type:"text",ph:"科目名稱"},
+  {type:"section",label:"二、在校"},
+  {key:"lunch",label:"午餐",type:"radio-lunch",opts:["自帶便當","學校午餐","外食/訂便當","不吃"]},
+  {key:"period8",label:"第八節內容",type:"radio",opts:["考試","上進度","複習","自習","無"]},
+  {key:"schoolEnd",label:"放學時間",type:"timesel",rangeKey:"schoolEnd"},
+  {key:"leisure",label:"其他休閒活動",type:"text",ph:"例：看書、運動"},
 ];
 
-const WEEKEND_ROWS = [
-  { type: "section", label: "一、早晨" },
-  { key: "wakeup",   label: "起床時間",  type: "timesel", rangeKey: "wakeupWeekend" },
-
-  { type: "section", label: "二、活動" },
-  { key: "cram",     label: "補習",        type: "dynamic_cram", rangeKey: "weekendCram" },
-  { key: "club",     label: "才藝班/社團", type: "duration",     rangeKey: "duration" },
-  { key: "work",     label: "打工",        type: "timerange",    rangeKey: "allDay" },
-  { key: "workType", label: "打工內容",    type: "text", ph: "例：超商，若無留空" },
-  { key: "hw",       label: "寫作業/唸書準備考試", type: "duration", rangeKey: "duration" },
-  { key: "game",     label: "打電動/上社群", type: "duration",   rangeKey: "duration" },
-  { key: "gameName", label: "遊戲/社群名稱", type: "merged-text", ph: "例：IG、Minecraft（週末填一次）" },
-  { key: "leisure",  label: "其他休閒活動",  type: "text", ph: "例：看書、運動" },
-  { key: "sleep",    label: "睡覺時間",     type: "timesel",     rangeKey: "sleep" },
+const WEEKEND_ROWS=[
+  {type:"section",label:"一、早晨"},
+  {key:"wakeup",label:"起床時間",type:"timesel",rangeKey:"wakeupWeekend"},
+  {type:"section",label:"二、活動"},
+  {key:"cram",label:"補習",type:"dynamic_cram",rangeKey:"weekendCram"},
+  {key:"club",label:"才藝班/社團",type:"duration",rangeKey:"duration"},
+  {key:"work",label:"打工",type:"timerange",rangeKey:"allDay"},
+  {key:"workType",label:"打工內容",type:"text",ph:"例：超商，若無留空"},
+  {key:"hw",label:"寫作業/唸書準備考試",type:"duration",rangeKey:"duration"},
+  {key:"game",label:"打電動/上社群",type:"duration",rangeKey:"duration"},
+  {key:"gameName",label:"遊戲/社群名稱",type:"merged-text",ph:"例：IG、Minecraft（週末填一次）"},
+  {key:"leisure",label:"其他休閒活動",type:"text",ph:"例：看書、運動"},
+  {key:"sleep",label:"睡覺時間",type:"timesel",rangeKey:"sleep"},
 ];
 
-const WEEKDAY_COLS = ["mon","tue","wed","thu","fri"];
-const WEEKEND_COLS = ["sat","sun"];
+const WEEKDAY_COLS=["mon","tue","wed","thu","fri"];
+const WEEKEND_COLS=["sat","sun"];
 
-// ════════════════════════════════════════════
-// 動態補習欄位（週末用）
-// ════════════════════════════════════════════
-function buildDynamicCram(col) {
-  const wrap = document.createElement("div");
-  wrap.id = `${col}_cramWrap`;
-  wrap.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:4px;";
-
-  function addEntry(idx) {
-    const entry = document.createElement("div");
-    entry.style.cssText = "display:flex;flex-direction:column;gap:2px;background:#F0F8FF;border-radius:6px;padding:4px 6px;position:relative;";
-    entry.id = `${col}_cramEntry_${idx}`;
-
-    // 刪除按鈕（第一筆不顯示）
-    if (idx > 0) {
-      const del = document.createElement("button");
-      del.textContent = "✕";
-      del.title = "刪除這筆補習";
-      del.style.cssText = "position:absolute;top:2px;right:2px;border:none;background:transparent;color:#C44;font-size:0.75rem;cursor:pointer;padding:0 3px;";
-      del.onclick = () => { entry.remove(); };
-      entry.appendChild(del);
-    }
-
-    const subjectInp = document.createElement("input");
-    subjectInp.type = "text";
-    subjectInp.className = "t-text";
-    subjectInp.id = `${col}_cramSubject_${idx}`;
-    subjectInp.placeholder = "科目（例：數學）";
-    entry.appendChild(subjectInp);
-
-    const timeWrap = document.createElement("div");
-    timeWrap.style.cssText = "display:flex;align-items:center;gap:4px;";
-    const s = makeTimeSelect(`${col}_cramStart_${idx}`, "weekendCram");
-    const sep = document.createElement("span");
-    sep.textContent = "～";
-    sep.style.cssText = "font-size:0.75rem;color:#888;flex-shrink:0;";
-    const e = makeTimeSelect(`${col}_cramEnd_${idx}`, "weekendCram");
-    timeWrap.appendChild(s);
-    timeWrap.appendChild(sep);
-    timeWrap.appendChild(e);
-    entry.appendChild(timeWrap);
-
-    wrap.appendChild(entry);
+function buildDynamicCram(col){
+  const wrap=document.createElement("div");wrap.id=`${col}_cramWrap`;wrap.style.cssText="display:flex;flex-direction:column;gap:6px;padding:4px;";
+  function addEntry(idx){
+    const entry=document.createElement("div");entry.style.cssText="display:flex;flex-direction:column;gap:2px;background:#F0F8FF;border-radius:6px;padding:4px 6px;position:relative;";entry.id=`${col}_cramEntry_${idx}`;
+    if(idx>0){const del=document.createElement("button");del.textContent="✕";del.style.cssText="position:absolute;top:2px;right:2px;border:none;background:transparent;color:#C44;font-size:.75rem;cursor:pointer;padding:0 3px;";del.onclick=()=>entry.remove();entry.appendChild(del);}
+    const si=document.createElement("input");si.type="text";si.className="t-text";si.id=`${col}_cramSubject_${idx}`;si.placeholder="科目（例：數學）";entry.appendChild(si);
+    const tw=document.createElement("div");tw.style.cssText="display:flex;align-items:center;gap:4px;";
+    const s=makeTimeSelect(`${col}_cramStart_${idx}`,"weekendCram");const sep=document.createElement("span");sep.textContent="～";sep.style.cssText="font-size:.75rem;color:#888;flex-shrink:0;";const e=makeTimeSelect(`${col}_cramEnd_${idx}`,"weekendCram");
+    tw.appendChild(s);tw.appendChild(sep);tw.appendChild(e);entry.appendChild(tw);wrap.appendChild(entry);
   }
-
-  addEntry(0); // 預設一筆
-
-  const addBtn = document.createElement("button");
-  addBtn.textContent = "+ 新增一科補習";
-  addBtn.style.cssText = "border:1.5px dashed #5BA4D4;background:transparent;color:#2E6DA4;border-radius:6px;padding:4px 8px;font-size:0.78rem;font-family:inherit;cursor:pointer;margin-top:2px;";
-  addBtn.onclick = () => {
-    const count = wrap.querySelectorAll("[id^='" + col + "_cramEntry_']").length;
-    addEntry(count);
-  };
-  wrap.appendChild(addBtn);
-
-  return wrap;
+  addEntry(0);
+  const btn=document.createElement("button");btn.textContent="+ 新增一科補習";btn.style.cssText="border:1.5px dashed #5BA4D4;background:transparent;color:#2E6DA4;border-radius:6px;padding:4px 8px;font-size:.78rem;font-family:inherit;cursor:pointer;margin-top:2px;";
+  btn.onclick=()=>{const c=wrap.querySelectorAll(`[id^='${col}_cramEntry_']`).length;addEntry(c);};wrap.appendChild(btn);return wrap;
 }
 
-// ════════════════════════════════════════════
-// Build tables
-// ════════════════════════════════════════════
-function buildTable(rows, cols, tbodyId) {
-  const tbody = document.getElementById(tbodyId);
-  tbody.innerHTML = "";
-
-  rows.forEach(row => {
-    const tr = document.createElement("tr");
-    if (row.type === "section") {
-      tr.className = "section-row";
-      const td = document.createElement("td");
-      td.colSpan = cols.length + 1;
-      td.textContent = row.label;
-      tr.appendChild(td);
-    } else if (row.type === "merged-text") {
-      tr.className = "data-row";
-      const tdLabel = document.createElement("td");
-      tdLabel.className = "row-label";
-      tdLabel.innerHTML = row.label;
-      tr.appendChild(tdLabel);
-      const tdMerged = document.createElement("td");
-      tdMerged.colSpan = cols.length;
-      tdMerged.style.cssText = "vertical-align:middle;padding:6px 10px;";
-      const inp = document.createElement("input");
-      inp.type = "text";
-      inp.className = "t-text";
-      inp.id = `merged_${row.key}`;
-      inp.placeholder = row.ph || "";
-      inp.style.width = "100%";
-      tdMerged.appendChild(inp);
-      tr.appendChild(tdMerged);
+function buildTable(rows,cols,tbodyId){
+  const tbody=document.getElementById(tbodyId);tbody.innerHTML="";
+  rows.forEach(row=>{
+    const tr=document.createElement("tr");
+    if(row.type==="section"){
+      tr.className="section-row";const td=document.createElement("td");td.colSpan=cols.length+1;td.textContent=row.label;tr.appendChild(td);
+    } else if(row.type==="merged-text"){
+      tr.className="data-row";const tl=document.createElement("td");tl.className="row-label";tl.innerHTML=row.label;tr.appendChild(tl);
+      const tm=document.createElement("td");tm.colSpan=cols.length;tm.style.cssText="vertical-align:middle;padding:6px 10px;";
+      const inp=document.createElement("input");inp.type="text";inp.className="t-text";inp.id=`merged_${row.key}`;inp.placeholder=row.ph||"";inp.style.width="100%";tm.appendChild(inp);tr.appendChild(tm);
     } else {
-      tr.className = "data-row";
-      const tdLabel = document.createElement("td");
-      tdLabel.className = "row-label";
-      tdLabel.innerHTML = row.label + (row.sub ? `<span class="row-sublabel">${row.sub}</span>` : "");
-      tr.appendChild(tdLabel);
-
-      cols.forEach(col => {
-        const td = document.createElement("td");
-        td.style.cssText = "text-align:center;vertical-align:middle;";
-
-        if (row.type === "timesel" || row.type === "duration") {
-          const rKey = row.type === "duration" ? "duration" : row.rangeKey;
-          const sel = makeTimeSelect(`${col}_${row.key}`, rKey);
-          td.appendChild(sel);
-
-        } else if (row.type === "timerange" || row.type === "timerange+check") {
-          const wrap = makeTimeRangeCell(col, row.key, row.rangeKey || "range");
-          // 補習加「無」勾選
-          if (row.type === "timerange+check" && row.noOpt) {
-            const lbl = document.createElement("label");
-            lbl.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;margin-top:4px;justify-content:center;cursor:pointer;";
-            const cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.value = row.noOpt;
-            cb.className = `cb_${col}_${row.key}_no`;
-            cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
-            // 勾選「無」時停用時間選單
-            cb.addEventListener("change", () => {
-              wrap.querySelectorAll("select").forEach(s => s.disabled = cb.checked);
-            });
-            lbl.appendChild(cb);
-            lbl.appendChild(document.createTextNode(" " + row.noOpt));
-            wrap.appendChild(lbl);
-          }
-          td.appendChild(wrap);
-
-        } else if (row.type === "dynamic_cram") {
-          td.style.textAlign = "left";
-          td.appendChild(buildDynamicCram(col));
-
-        } else if (row.type === "lunch-detail") {
-          // 已改為內嵌在 radio-lunch，此處保留空白不渲染
-          td.appendChild(document.createElement("span"));
-
-        } else if (row.type === "radio-lunch") {
-          const div = document.createElement("div");
-          div.className = "check-group";
-          row.opts.forEach(opt => {
-            const lbl = document.createElement("label");
-            const inp = document.createElement("input");
-            inp.type = "radio";
-            inp.value = opt;
-            inp.name = `${col}_lunch_radio`;
-            inp.id   = `${col}_lunch_${opt}`;
-            inp.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;";
-            lbl.appendChild(inp);
-            lbl.appendChild(document.createTextNode(" " + opt));
-            div.appendChild(lbl);
-          });
-          // 條件顯示的細節勾選區
-          const detailWrap = document.createElement("div");
-          detailWrap.id = `${col}_lunchDetailWrap`;
-          detailWrap.style.cssText = "display:none;margin-top:5px;padding:5px 6px;background:#EAF4FB;border-radius:6px;border:1px solid #C8DCF0;";
-          const detailLabel = document.createElement("div");
-          detailLabel.style.cssText = "font-size:0.74rem;color:#2E6DA4;font-weight:600;margin-bottom:3px;";
-          detailLabel.textContent = "學校午餐內容（可複選）";
-          detailWrap.appendChild(detailLabel);
-          ["有炸物","有加工食品","與菜單相符"].forEach(opt => {
-            const lbl = document.createElement("label");
-            lbl.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;";
-            const cb = document.createElement("input");
-            cb.type = "checkbox"; cb.value = opt;
-            cb.className = `cb_${col}_lunchDetail`;
-            cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
-            lbl.appendChild(cb);
-            lbl.appendChild(document.createTextNode(" " + opt));
-            detailWrap.appendChild(lbl);
-          });
-          div.appendChild(detailWrap);
-          // 監聽 radio 切換
-          setTimeout(() => {
-            div.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb => {
-              rb.addEventListener("change", () => {
-                detailWrap.style.display = rb.value === "學校午餐" && rb.checked ? "block" : detailWrap.style.display;
-                if (rb.value !== "學校午餐") detailWrap.style.display = "none";
-              });
-            });
-          }, 0);
+      tr.className="data-row";const tl=document.createElement("td");tl.className="row-label";tl.innerHTML=row.label+(row.sub?`<span class="row-sublabel">${row.sub}</span>`:"");tr.appendChild(tl);
+      cols.forEach(col=>{
+        const td=document.createElement("td");td.style.cssText="text-align:center;vertical-align:middle;";
+        if(row.type==="timesel"||row.type==="duration"){td.appendChild(makeTimeSelect(`${col}_${row.key}`,row.type==="duration"?"duration":row.rangeKey));}
+        else if(row.type==="timerange"){td.appendChild(makeTimeRangeCell(col,row.key,row.rangeKey||"range"));}
+        else if(row.type==="dynamic_cram"){td.style.textAlign="left";td.appendChild(buildDynamicCram(col));}
+        else if(row.type==="radio-lunch"){
+          const div=document.createElement("div");div.className="check-group";
+          row.opts.forEach(opt=>{const l=document.createElement("label");const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_lunch_radio`;i.id=`${col}_lunch_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));div.appendChild(l);});
+          const dw=document.createElement("div");dw.id=`${col}_lunchDetailWrap`;dw.style.cssText="display:none;margin-top:5px;padding:5px 6px;background:#EAF4FB;border-radius:6px;border:1px solid #C8DCF0;";
+          const dl=document.createElement("div");dl.style.cssText="font-size:.74rem;color:#2E6DA4;font-weight:600;margin-bottom:3px;";dl.textContent="學校午餐內容（可複選）";dw.appendChild(dl);
+          ["有炸物","有加工食品","與菜單相符"].forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:4px;font-size:.78rem;cursor:pointer;";const cb=document.createElement("input");cb.type="checkbox";cb.value=opt;cb.className=`cb_${col}_lunchDetail`;cb.style.cssText="width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";l.appendChild(cb);l.appendChild(document.createTextNode(" "+opt));dw.appendChild(l);});
+          div.appendChild(dw);
+          setTimeout(()=>{div.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb=>{rb.addEventListener("change",()=>{dw.style.display=(rb.value==="學校午餐"&&rb.checked)?"block":"none";if(rb.value!=="學校午餐")dw.style.display="none";});});},0);
           td.appendChild(div);
-
-        } else if (row.type === "check" || row.type === "check+text"
-                || row.type === "radio" || row.type === "radio+text") {
-          const isRadio = row.type === "radio" || row.type === "radio+text";
-          const div = document.createElement("div");
-          div.className = "check-group";
-          row.opts.forEach(opt => {
-            const lbl = document.createElement("label");
-            const inp = document.createElement("input");
-            inp.type = isRadio ? "radio" : "checkbox";
-            inp.value = opt;
-            if (isRadio) {
-              inp.name = `${col}_${row.key}_radio`;
-              inp.id   = `${col}_${row.key}_${opt}`;
-            } else {
-              inp.className = `cb_${col}_${row.key}`;
-            }
-            inp.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;";
-            lbl.appendChild(inp);
-            lbl.appendChild(document.createTextNode(" " + opt));
-            div.appendChild(lbl);
-          });
-          if (row.type === "check+text" || row.type === "radio+text") {
-            const tinp = document.createElement("input");
-            tinp.type = "text";
-            tinp.className = "t-text";
-            tinp.style.marginTop = "5px";
-            tinp.id = `${col}_${row.textKey}`;
-            tinp.placeholder = row.ph || "";
-            div.appendChild(tinp);
-          }
+        } else if(row.type==="radio"){
+          const div=document.createElement("div");div.className="check-group";
+          row.opts.forEach(opt=>{const l=document.createElement("label");const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_${row.key}_radio`;i.id=`${col}_${row.key}_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));div.appendChild(l);});
           td.appendChild(div);
-
-        } else if (row.type === "text") {
-          const inp = document.createElement("input");
-          inp.type = "text";
-          inp.className = "t-text";
-          inp.id = `${col}_${row.key}`;
-          inp.placeholder = row.ph || "";
-          td.appendChild(inp);
+        } else if(row.type==="text"){
+          const i=document.createElement("input");i.type="text";i.className="t-text";i.id=`${col}_${row.key}`;i.placeholder=row.ph||"";td.appendChild(i);
         }
-
         tr.appendChild(td);
       });
     }
     tbody.appendChild(tr);
-
-    // 電腦版：在早自習列後插入複製按鈕列（僅 weekdayBody）
-    if (row.key === "morningExam" && tbodyId === "weekdayBody") {
-      const copyTr = document.createElement("tr");
-      copyTr.className = "data-row";
-      copyTr.id = "copyRow";
-      const copyTd = document.createElement("td");
-      copyTd.colSpan = cols.length + 1;
-      copyTd.style.cssText = "padding:8px 14px;background:#F0F8FF;";
-      const copyBtn = document.createElement("button");
-      copyBtn.className = "btn btn-secondary";
-      copyBtn.style.cssText = "font-size:0.82rem;padding:7px 16px;";
-      copyBtn.textContent = "📋 將星期一的起床／出門／到校時間複製到星期二～五";
-      copyBtn.onclick = copyMonToAll;
-      copyTd.appendChild(copyBtn);
-      copyTr.appendChild(copyTd);
-      tbody.appendChild(copyTr);
+    if(row.key==="morningExam"&&tbodyId==="weekdayBody"){
+      const cr=document.createElement("tr");cr.className="data-row";cr.id="copyRow";
+      const ct=document.createElement("td");ct.colSpan=cols.length+1;ct.style.cssText="padding:8px 14px;background:#F0F8FF;";
+      const cb=document.createElement("button");cb.className="btn btn-secondary";cb.style.cssText="font-size:.82rem;padding:7px 16px;";cb.textContent="📋 將星期一的起床／出門／到校時間複製到星期二～五";cb.onclick=copyMonToAll;ct.appendChild(cb);cr.appendChild(ct);tbody.appendChild(cr);
     }
   });
 }
 
-// ════════════════════════════════════════════
-// Page navigation
-// ════════════════════════════════════════════
-const DAY_NAMES = ["星期一","星期二","星期三","星期四","星期五"];
-const DAY_KEYS  = ["mon","tue","wed","thu","fri"];
-let currentPage = 1;
-const TOTAL_PAGES = 3;
+// ── Navigation ──
+const DAY_NAMES=["星期一","星期二","星期三","星期四","星期五"];
+const DAY_KEYS=["mon","tue","wed","thu","fri"];
+let currentPage=1;const TOTAL_PAGES=3;
 
-function goPage(n) {
-  if (n > currentPage && !validatePage(currentPage)) return;
-
-  // 離開第2頁時的額外驗證
-  if (n > currentPage && currentPage === 2) {
-    // 手機版：提醒學生填完星期二～五
-    if (isMobile() && currentDayIndex < 4) {
-      const remaining = DAY_NAMES.slice(currentDayIndex + 1).join("、");
-      showToast(`請先完成 ${remaining} 的填答，再進入下一步`, "error-t");
-      return;
-    }
-    // 時間順序驗證
-    let allOk = true;
-    WEEKDAY_COLS.forEach(col => {
-      if (!validateTimeOrder(col)) allOk = false;
-    });
-    if (!allOk) return;
-    // 時段結束不得早於開始的驗證
-    if (!validateAllTimeRanges()) return;
+function goPage(n){
+  if(n>currentPage&&!validatePage(currentPage))return;
+  if(n>currentPage&&currentPage===2){
+    if(isMobile()&&currentDayIndex<4){showToast(`請先完成 ${DAY_NAMES.slice(currentDayIndex+1).join("、")} 的填答，再進入下一步`,"error-t");return;}
+    let ok=true;WEEKDAY_COLS.forEach(col=>{if(!validateTimeOrder(col))ok=false;});if(!ok)return;
   }
-
-  document.getElementById("page" + currentPage).classList.remove("active");
-  currentPage = n;
-  document.getElementById("page" + currentPage).classList.add("active");
-  updateProgress();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("page"+currentPage).classList.remove("active");
+  currentPage=n;document.getElementById("page"+currentPage).classList.add("active");
+  updateProgress();window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function updateProgress() {
-  const pct = ((currentPage - 1) / TOTAL_PAGES * 100).toFixed(0);
-  document.getElementById("progressFill").style.width = pct + "%";
-  document.getElementById("progressLabel").textContent = `第 ${currentPage} 頁，共 ${TOTAL_PAGES} 頁`;
+function updateProgress(){
+  const pct=((currentPage-1)/TOTAL_PAGES*100).toFixed(0);
+  document.getElementById("progressFill").style.width=pct+"%";
+  document.getElementById("progressLabel").textContent=`第 ${currentPage} 頁，共 ${TOTAL_PAGES} 頁`;
 }
 
-// ════════════════════════════════════════════
-// Validation
-// ════════════════════════════════════════════
-function validatePage(page) {
-  if (page === 1) {
-    let ok = true;
-    [["f_name","e_name"],["f_county","e_county"],["f_grade","e_grade"]].forEach(([fid, eid]) => {
-      const el = document.getElementById(fid);
-      const err = document.getElementById(eid);
-      if (!el.value.trim()) { el.classList.add("error"); err.classList.add("show"); ok = false; }
-      else { el.classList.remove("error"); err.classList.remove("show"); }
-    });
-    const stChecked = document.querySelector('input[name="schoolType"]:checked');
-    const stErr = document.getElementById("e_schooltype");
-    if (!stChecked) { stErr.classList.add("show"); ok = false; }
-    else { stErr.classList.remove("show"); }
-    if (!ok) showToast("請填寫所有必填欄位（標有 * 的欄位）", "error-t");
-    return ok;
-  }
-  return true;
+function validatePage(page){
+  if(page===1){
+    let ok=true;
+    [["f_name","e_name"],["f_county","e_county"],["f_grade","e_grade"]].forEach(([fid,eid])=>{const el=document.getElementById(fid);const err=document.getElementById(eid);if(!el.value.trim()){el.classList.add("error");err.classList.add("show");ok=false;}else{el.classList.remove("error");err.classList.remove("show");}});
+    const st=document.querySelector('input[name="schoolType"]:checked');const se=document.getElementById("e_schooltype");if(!st){se.classList.add("show");ok=false;}else se.classList.remove("show");
+    if(!ok)showToast("請填寫所有必填欄位（標有 * 的欄位）","error-t");return ok;
+  }return true;
 }
 
-// ════════════════════════════════════════════
-// Collect data
-// ════════════════════════════════════════════
-function collectData() {
-  const data = {
-    timestamp: new Date().toISOString(),
-    name:      document.getElementById("f_name").value.trim(),
-    county:    document.getElementById("f_county").value,
-    schoolType:(document.querySelector('input[name="schoolType"]:checked') || {}).value || "",
-    grade:     document.getElementById("f_grade").value,
-    gender:    document.getElementById("f_gender").value,
-    commute:   [...document.querySelectorAll(".commute:checked")].map(c => c.value).join("、"),
+function collectData(){
+  const data={
+    timestamp:new Date().toISOString(),
+    name:document.getElementById("f_name").value.trim(),
+    county:document.getElementById("f_county").value,
+    schoolType:(document.querySelector('input[name="schoolType"]:checked')||{}).value||"",
+    grade:document.getElementById("f_grade").value,
+    gender:document.getElementById("f_gender").value,
+    commute:[...document.querySelectorAll(".commute:checked")].map(c=>c.value).join("、"),
+    // 整週一次
+    cramSubjects:[...document.querySelectorAll(".once_cb_cramSubjects:checked")].map(c=>c.value).join("、"),
+    cramTotal:(document.getElementById("once_cramTotal")||{}).value||"",
+    club:(document.querySelector('input[name="once_club_radio"]:checked')||{}).value||"",
+    clubTotal:(document.getElementById("once_clubTotal")||{}).value||"",
+    work:(document.querySelector('input[name="once_work_radio"]:checked')||{}).value||"",
+    workTotal:(document.getElementById("once_workTotal")||{}).value||"",
+    workType:(document.getElementById("once_workType")||{}).value||"",
+    gameDaily:(document.getElementById("once_gameDaily")||{}).value||"",
+    gameName:(document.getElementById("once_gameName")||{}).value||"",
+    sleepAvgTime:(document.getElementById("once_sleepAvgTime")||{}).value||"",
+    sleepAvgHours:(document.getElementById("once_sleepAvgHours")||{}).value||"",
+    sleepFri:(document.getElementById("once_sleepFri")||{}).value||"",
   };
-
-  // Weekdays
-  WEEKDAY_COLS.forEach(col => {
-    WEEKDAY_ROWS.forEach(row => {
-      if (row.type === "section") return;
-      if (row.type === "timesel") {
-        const el = document.getElementById(`${col}_${row.key}`);
-        data[`${col}_${row.key}`] = el ? el.value : "";
-      } else if (row.type === "timerange" || row.type === "timerange+check") {
-        const noCheck = document.querySelector(`.cb_${col}_${row.key}_no:checked`);
-        if (noCheck) {
-          data[`${col}_${row.key}Start`] = "無";
-          data[`${col}_${row.key}End`]   = "無";
-        } else {
-          const s = document.getElementById(`${col}_${row.key}Start`);
-          const e = document.getElementById(`${col}_${row.key}End`);
-          data[`${col}_${row.key}Start`] = s ? s.value : "";
-          data[`${col}_${row.key}End`]   = e ? e.value : "";
-        }
-      } else if (row.type === "radio-lunch") {
-        const checked = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
-        data[`${col}_lunch`] = checked ? checked.value : "";
-        const detail = [...document.querySelectorAll(`.cb_${col}_lunchDetail:checked`)].map(c => c.value);
-        data[`${col}_lunchDetail`] = detail.join("、");
-      } else if (row.type === "lunch-detail") {
-        // 已內嵌在 radio-lunch，跳過
-      } else if (row.type === "check" || row.type === "check+text"
-              || row.type === "radio" || row.type === "radio+text") {
-        const isRadio = row.type === "radio" || row.type === "radio+text";
-        if (isRadio) {
-          const checked = document.querySelector(`input[name="${col}_${row.key}_radio"]:checked`);
-          data[`${col}_${row.key}`] = checked ? checked.value : "";
-        } else {
-          const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
-          data[`${col}_${row.key}`] = checked.join("、");
-        }
-        if (row.type === "check+text" || row.type === "radio+text") {
-          const el = document.getElementById(`${col}_${row.textKey}`);
-          data[`${col}_${row.textKey}`] = el ? el.value : "";
-        }
-      } else if (row.type === "merged-text") {
-        const el = document.getElementById(`merged_${row.key}`);
-        data[`merged_${row.key}`] = el ? el.value : "";
-      } else if (row.type === "text") {
-        const el = document.getElementById(`${col}_${row.key}`);
-        data[`${col}_${row.key}`] = el ? el.value : "";
-      }
+  WEEKDAY_COLS.forEach(col=>{
+    WEEKDAY_ROWS.forEach(row=>{
+      if(row.type==="section")return;
+      if(row.type==="timesel"){const el=document.getElementById(`${col}_${row.key}`);data[`${col}_${row.key}`]=el?el.value:"";}
+      else if(row.type==="radio-lunch"){const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);data[`${col}_lunch`]=c?c.value:"";data[`${col}_lunchDetail`]=[...document.querySelectorAll(`.cb_${col}_lunchDetail:checked`)].map(c=>c.value).join("、");}
+      else if(row.type==="radio"){const c=document.querySelector(`input[name="${col}_${row.key}_radio"]:checked`);data[`${col}_${row.key}`]=c?c.value:"";}
+      else if(row.type==="text"){const el=document.getElementById(`${col}_${row.key}`);data[`${col}_${row.key}`]=el?el.value:"";}
     });
   });
-
-  // Weekend
-  WEEKEND_COLS.forEach(col => {
-    WEEKEND_ROWS.forEach(row => {
-      if (row.type === "section") return;
-      if (row.type === "timesel" || row.type === "duration") {
-        const el = document.getElementById(`${col}_${row.key}`);
-        data[`${col}_${row.key}`] = el ? el.value : "";
-      } else if (row.type === "timerange") {
-        const s = document.getElementById(`${col}_${row.key}Start`);
-        const e = document.getElementById(`${col}_${row.key}End`);
-        data[`${col}_${row.key}Start`] = s ? s.value : "";
-        data[`${col}_${row.key}End`]   = e ? e.value : "";
-      } else if (row.type === "dynamic_cram") {
-        // 收集所有動態補習筆數
-        const entries = document.querySelectorAll(`[id^='${col}_cramEntry_']`);
-        const cramList = [];
-        entries.forEach((entry, i) => {
-          const subj = document.getElementById(`${col}_cramSubject_${i}`);
-          const s    = document.getElementById(`${col}_cramStart_${i}`);
-          const e    = document.getElementById(`${col}_cramEnd_${i}`);
-          const subjVal = subj ? subj.value.trim() : "";
-          const sVal    = s ? s.value : "";
-          const eVal    = e ? e.value : "";
-          if (subjVal || sVal || eVal) {
-            cramList.push(`${subjVal}(${sVal}～${eVal})`);
-          }
-        });
-        data[`${col}_cram`] = cramList.join("；");
-      } else if (row.type === "check" || row.type === "check+text") {
-        const checked = [...document.querySelectorAll(`.cb_${col}_${row.key}:checked`)].map(c => c.value);
-        data[`${col}_${row.key}`] = checked.join("、");
-      } else if (row.type === "merged-text") {
-        const el = document.getElementById(`merged_${row.key}`);
-        data[`weekend_merged_${row.key}`] = el ? el.value : "";
-      } else if (row.type === "text") {
-        const el = document.getElementById(`${col}_${row.key}`);
-        data[`${col}_${row.key}`] = el ? el.value : "";
-      }
+  WEEKEND_COLS.forEach(col=>{
+    WEEKEND_ROWS.forEach(row=>{
+      if(row.type==="section")return;
+      if(row.type==="timesel"||row.type==="duration"){const el=document.getElementById(`${col}_${row.key}`);data[`${col}_${row.key}`]=el?el.value:"";}
+      else if(row.type==="timerange"){const s=document.getElementById(`${col}_${row.key}Start`);const e=document.getElementById(`${col}_${row.key}End`);data[`${col}_${row.key}Start`]=s?s.value:"";data[`${col}_${row.key}End`]=e?e.value:"";}
+      else if(row.type==="dynamic_cram"){const entries=document.querySelectorAll(`[id^='${col}_cramEntry_']`);const list=[];entries.forEach((en,i)=>{const su=document.getElementById(`${col}_cramSubject_${i}`);const s=document.getElementById(`${col}_cramStart_${i}`);const e=document.getElementById(`${col}_cramEnd_${i}`);const sv=su?su.value.trim():"",ss=s?s.value:"",se=e?e.value:"";if(sv||ss||se)list.push(`${sv}(${ss}～${se})`);});data[`${col}_cram`]=list.join("；");}
+      else if(row.type==="merged-text"){const el=document.getElementById(`merged_${row.key}`);data[`weekend_merged_${row.key}`]=el?el.value:"";}
+      else if(row.type==="text"){const el=document.getElementById(`${col}_${row.key}`);data[`${col}_${row.key}`]=el?el.value:"";}
     });
   });
-
   return data;
 }
 
-// ════════════════════════════════════════════
-// Submit
-// ════════════════════════════════════════════
-async function submitForm() {
-  if (!validatePage(3)) return;
-  const data = collectData();
-
-  if (SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
-    console.log("Demo mode – data:", data);
-    showThankyou();
-    return;
-  }
-
+async function submitForm(){
+  if(!validatePage(3))return;
+  const data=collectData();
   document.getElementById("overlay").classList.add("show");
-  try {
-    await fetch(SCRIPT_URL, {
-      method: "POST", mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    document.getElementById("overlay").classList.remove("show");
-    showThankyou();
-  } catch (err) {
-    document.getElementById("overlay").classList.remove("show");
-    showToast("送出失敗，請檢查網路後再試一次。", "error-t");
-    console.error(err);
-  }
+  try{
+    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+    document.getElementById("overlay").classList.remove("show");showThankyou();
+  }catch(err){document.getElementById("overlay").classList.remove("show");showToast("送出失敗，請檢查網路後再試一次。","error-t");}
 }
 
-function showThankyou() {
-  lockSubmitted();
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
-  document.getElementById("page" + currentPage).classList.remove("active");
+function showThankyou(){
+  lockSubmitted();try{localStorage.removeItem(STORAGE_KEY);}catch(e){}
+  document.getElementById("page"+currentPage).classList.remove("active");
   document.getElementById("page4").classList.add("active");
-  document.getElementById("progressFill").style.width = "100%";
-  document.getElementById("progressLabel").textContent = "已完成";
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("progressFill").style.width="100%";
+  document.getElementById("progressLabel").textContent="已完成";
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
-// ════════════════════════════════════════════
-// Toast helper
-// ════════════════════════════════════════════
 let toastTimer;
-function showToast(msg, type = "") {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast show" + (type ? " " + type : "");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 3500);
+function showToast(msg,type=""){const t=document.getElementById("toast");t.textContent=msg;t.className="toast show"+(type?" "+type:"");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3500);}
+
+// ── localStorage ──
+const STORAGE_KEY="nhrsurvey_draft_v3";
+const SUBMITTED_KEY="nhrsurvey_done_v2";
+
+function saveDraft(){
+  if(checkAlreadySubmitted())return;
+  try{
+    let draft={};try{const ex=localStorage.getItem(STORAGE_KEY);if(ex)draft=JSON.parse(ex);}catch(e){}
+    draft["_page"]=currentPage;
+    ["f_name","f_county","f_grade","f_gender"].forEach(id=>{const el=document.getElementById(id);if(el)draft[id]=el.value;});
+    document.querySelectorAll(".commute").forEach(cb=>{draft["commute_"+cb.value]=cb.checked;});
+    draft["schoolType"]=(document.querySelector('input[name="schoolType"]:checked')||{}).value||"";
+    document.querySelectorAll("#page1 select,#page2 select,#page3 select,#mobileDayCard select,#mobileWeekendCard select").forEach(el=>{if(el.id)draft[el.id]=el.value;});
+    document.querySelectorAll("#page1 input[type=text],#page2 input[type=text],#page3 input[type=text],#mobileDayCard input[type=text],#mobileWeekendCard input[type=text]").forEach(el=>{if(el.id)draft[el.id]=el.value;});
+    document.querySelectorAll("#page1 input[type=checkbox],#page2 input[type=checkbox],#page3 input[type=checkbox],#mobileDayCard input[type=checkbox],#mobileWeekendCard input[type=checkbox]").forEach(cb=>{draft["cb__"+(cb.id||cb.className+"__"+cb.value)]=cb.checked;});
+    document.querySelectorAll("#page2 input[type=radio],#mobileDayCard input[type=radio]").forEach(rb=>{if(rb.name)draft["radio__"+rb.name+"__"+rb.value]=rb.checked;});
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(draft));
+  }catch(e){}
 }
 
-// ════════════════════════════════════════════
-// localStorage 暫存 & 重複填寫鎖定
-// ════════════════════════════════════════════
-const STORAGE_KEY   = "nhrsurvey_draft_v2";
-const SUBMITTED_KEY = "nhrsurvey_done_v2";
-
-// 收集所有表單欄位值存入 localStorage
-function saveDraft() {
-  // 絕對不能在這裡碰 SUBMITTED_KEY
-  if (checkAlreadySubmitted()) return;
-  try {
-    // 先讀取既有 draft，疊加更新，避免手機版切換天時蓋掉其他天的資料
-    let draft = {};
-    try {
-      const existing = localStorage.getItem(STORAGE_KEY);
-      if (existing) draft = JSON.parse(existing);
-    } catch(e) {}
-
-    draft["_page"] = currentPage;
-
-    // 基本資料
-    ["f_name","f_county","f_grade","f_gender"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) draft[id] = el.value;
-    });
-    document.querySelectorAll(".commute").forEach(cb => {
-      draft["commute_" + cb.value] = cb.checked;
-    });
-    draft["schoolType"] = (document.querySelector('input[name="schoolType"]:checked') || {}).value || "";
-
-    // 所有 select（只更新目前 DOM 中有的）
-    document.querySelectorAll("#page1 select, #page2 select, #page3 select, #mobileDayCard select, #mobileWeekendCard select").forEach(el => {
-      if (el.id) draft[el.id] = el.value;
-    });
-    // 所有 text input
-    document.querySelectorAll("#page1 input[type=text], #page2 input[type=text], #page3 input[type=text], #mobileDayCard input[type=text], #mobileWeekendCard input[type=text]").forEach(el => {
-      if (el.id) draft[el.id] = el.value;
-    });
-    // checkboxes
-    document.querySelectorAll("#page1 input[type=checkbox], #page2 input[type=checkbox], #page3 input[type=checkbox], #mobileDayCard input[type=checkbox], #mobileWeekendCard input[type=checkbox]").forEach(cb => {
-      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
-      draft[key] = cb.checked;
-    });
-    // radio buttons
-    document.querySelectorAll("#page2 input[type=radio], #mobileDayCard input[type=radio], #mobileWeekendCard input[type=radio]").forEach(rb => {
-      if (rb.name) draft["radio__" + rb.name + "__" + rb.value] = rb.checked;
-    });
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-  } catch(e) {}
+function restoreDraft(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const draft=JSON.parse(raw);
+    ["f_name","f_county","f_grade","f_gender"].forEach(id=>{const el=document.getElementById(id);if(el&&draft[id]!==undefined)el.value=draft[id];});
+    document.querySelectorAll(".commute").forEach(cb=>{if(draft["commute_"+cb.value]!==undefined)cb.checked=draft["commute_"+cb.value];});
+    if(draft["schoolType"]){const rb=document.querySelector(`input[name="schoolType"][value="${draft["schoolType"]}"]`);if(rb)rb.checked=true;}
+    document.querySelectorAll("#page1 select,#page2 select,#page3 select").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
+    document.querySelectorAll("#page1 input[type=text],#page2 input[type=text],#page3 input[type=text]").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
+    document.querySelectorAll("#page1 input[type=checkbox],#page2 input[type=checkbox],#page3 input[type=checkbox]").forEach(cb=>{const k="cb__"+(cb.id||cb.className+"__"+cb.value);if(draft[k]!==undefined)cb.checked=draft[k];});
+    document.querySelectorAll("#page2 input[type=radio]").forEach(rb=>{const k="radio__"+rb.name+"__"+rb.value;if(draft[k]!==undefined)rb.checked=draft[k];});
+    WEEKDAY_COLS.forEach(col=>{const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);const w=document.getElementById(`${col}_lunchDetailWrap`);if(w)w.style.display=(c?.value==="學校午餐")?"block":"none";});
+    updateOnceVis();
+    if(draft["_page"]&&draft["_page"]>1){currentPage=draft["_page"];document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById("page"+currentPage).classList.add("active");updateProgress();showToast("已為您還原上次填寫的進度 📋");}
+  }catch(e){}
 }
 
-// 從 localStorage 還原
-function restoreDraft() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const draft = JSON.parse(raw);
-
-    ["f_name","f_county","f_grade","f_gender"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && draft[id] !== undefined) el.value = draft[id];
-    });
-    document.querySelectorAll(".commute").forEach(cb => {
-      if (draft["commute_" + cb.value] !== undefined) cb.checked = draft["commute_" + cb.value];
-    });
-    if (draft["schoolType"]) {
-      const rb = document.querySelector(`input[name="schoolType"][value="${draft["schoolType"]}"]`);
-      if (rb) rb.checked = true;
-    }
-    document.querySelectorAll("#page1 select, #page2 select, #page3 select").forEach(el => {
-      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
-    });
-    document.querySelectorAll("#page1 input[type=text], #page2 input[type=text], #page3 input[type=text]").forEach(el => {
-      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
-    });
-    document.querySelectorAll("#page1 input[type=checkbox], #page2 input[type=checkbox], #page3 input[type=checkbox]").forEach(cb => {
-      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
-      if (draft[key] !== undefined) cb.checked = draft[key];
-    });
-    // radio buttons
-    document.querySelectorAll("#page2 input[type=radio]").forEach(rb => {
-      const key = "radio__" + rb.name + "__" + rb.value;
-      if (draft[key] !== undefined) rb.checked = draft[key];
-    });
-    // 還原學校午餐細節框的顯示狀態
-    WEEKDAY_COLS.forEach(col => {
-      const checked = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
-      const wrap = document.getElementById(`${col}_lunchDetailWrap`);
-      if (wrap) wrap.style.display = (checked?.value === "學校午餐") ? "block" : "none";
-    });
-
-    // 還原到上次所在頁
-    if (draft["_page"] && draft["_page"] > 1) {
-      currentPage = draft["_page"];
-      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-      document.getElementById("page" + currentPage).classList.add("active");
-      updateProgress();
-      showToast("已為您還原上次填寫的進度 📋");
-    }
-  } catch(e) {}
+function setupAutosave(){
+  ["page1","page2","page3"].forEach(pid=>{const pg=document.getElementById(pid);if(pg){pg.addEventListener("change",saveDraft);pg.addEventListener("input",saveDraft);}});
+  ["mobileDayCard","mobileWeekendCard"].forEach(cid=>{const c=document.getElementById(cid);if(c){c.addEventListener("change",saveDraft);c.addEventListener("input",saveDraft);}});
 }
+function lockSubmitted(){try{localStorage.setItem(SUBMITTED_KEY,"1");}catch(e){}}
+function checkAlreadySubmitted(){try{return localStorage.getItem(SUBMITTED_KEY)==="1";}catch(e){return false;}}
 
-// 自動儲存（使用者主動互動才觸發，避免建表時誤觸）
-function setupAutosave() {
-  ["page1","page2","page3"].forEach(pid => {
-    const pg = document.getElementById(pid);
-    if (pg) {
-      pg.addEventListener("change", saveDraft);
-      pg.addEventListener("input",  saveDraft);
-    }
-  });
-  // 手機版動態卡片也需要監聽（欄位在 mobileDayCard / mobileWeekendCard 內）
-  ["mobileDayCard","mobileWeekendCard"].forEach(cid => {
-    const card = document.getElementById(cid);
-    if (card) {
-      card.addEventListener("change", saveDraft);
-      card.addEventListener("input",  saveDraft);
-    }
-  });
-}
-
-// 送出後鎖定（唯一寫入 SUBMITTED_KEY 的地方）
-function lockSubmitted() {
-  try { localStorage.setItem(SUBMITTED_KEY, "1"); } catch(e) {}
-}
-
-// 檢查是否已送出
-function checkAlreadySubmitted() {
-  try { return localStorage.getItem(SUBMITTED_KEY) === "1"; } catch(e) { return false; }
-}
-
-// ════════════════════════════════════════════
-// 複製星期一早晨時間到星期二～五
-// ════════════════════════════════════════════
-function copyMonToAll() {
-  const keys = ["wakeup", "leave", "arrive"];
-  const srcCol = "mon";
-  const destCols = ["tue", "wed", "thu", "fri"];
-
-  let copied = false;
-
-  if (isMobile()) {
-    // 手機版：從 mobileDayCard（目前顯示星期一）讀取值，存入 draft，再 re-render
-    keys.forEach(key => {
-      const srcEl = document.getElementById(`${srcCol}_${key}`);
-      if (srcEl && srcEl.value) {
-        copied = true;
-        destCols.forEach(col => {
-          // 直接寫進 draft
-          try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            const draft = raw ? JSON.parse(raw) : {};
-            draft[`${col}_${key}`] = srcEl.value;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-          } catch(e) {}
-        });
-      }
-    });
-    // re-render 目前天（若不是星期一，也會在切換時還原）
+// ── 複製星期一 ──
+function copyMonToAll(){
+  const keys=["wakeup","leave","arrive"];let copied=false;
+  if(isMobile()){
+    keys.forEach(key=>{const se=document.getElementById(`mon_${key}`);if(se&&se.value){copied=true;["tue","wed","thu","fri"].forEach(col=>{try{const raw=localStorage.getItem(STORAGE_KEY);const d=raw?JSON.parse(raw):{};d[`${col}_${key}`]=se.value;localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}catch(e){}});}});
     updateDaySwitcher();
-  } else {
-    // 電腦版
-    keys.forEach(key => {
-      const srcEl = document.getElementById(`${srcCol}_${key}`);
-      if (srcEl && srcEl.value) {
-        destCols.forEach(col => {
-          const destEl = document.getElementById(`${col}_${key}`);
-          if (destEl) destEl.value = srcEl.value;
-        });
-        copied = true;
-      }
-    });
+  }else{
+    keys.forEach(key=>{const se=document.getElementById(`mon_${key}`);if(se&&se.value){["tue","wed","thu","fri"].forEach(col=>{const de=document.getElementById(`${col}_${key}`);if(de)de.value=se.value;});copied=true;}});
+  }
+  if(copied)showToast("已複製星期一的起床／出門／到校時間到星期二～五 ✅","success");
+  else showToast("請先填寫星期一的起床、出門或到校時間","error-t");
+}
+
+// ── 驗證 ──
+function timeToMin(v){if(!v)return null;const[h,m]=v.split(":").map(Number);return h*60+m;}
+function validateTimeOrder(col){
+  const we=document.getElementById(`${col}_wakeup`),le=document.getElementById(`${col}_leave`),ae=document.getElementById(`${col}_arrive`);
+  if(!we||!le||!ae)return true;
+  const w=timeToMin(we.value),l=timeToMin(le.value),a=timeToMin(ae.value);
+  if(w!==null&&l!==null&&l<w){showToast("出門時間不能早於起床時間，請重新確認","error-t");le.style.borderColor="var(--error)";return false;}
+  if(l!==null&&a!==null&&a<l){showToast("到校時間不能早於出門時間，請重新確認","error-t");ae.style.borderColor="var(--error)";return false;}
+  [we,le,ae].forEach(el=>el.style.borderColor="");return true;
+}
+function setupTimeOrderValidation(){
+  WEEKDAY_COLS.forEach(col=>{["wakeup","leave","arrive"].forEach(key=>{const el=document.getElementById(`${col}_${key}`);if(el)el.addEventListener("change",()=>validateTimeOrder(col));});});
+}
+
+// ── 手機版 ──
+let currentDayIndex=0;
+function isMobile(){return window.innerWidth<=700;}
+
+function buildMobileDayCard(dayIdx){
+  const col=DAY_KEYS[dayIdx];const card=document.getElementById("mobileDayCard");card.innerHTML="";
+  WEEKDAY_ROWS.forEach(row=>{
+    if(row.type==="section"){const h=document.createElement("div");h.className="mobile-section-header";h.textContent=row.label;card.appendChild(h);return;}
+    const div=document.createElement("div");div.className="mobile-row";
+    const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.innerHTML=row.label+(row.sub?`<span class="row-sublabel">${row.sub}</span>`:"");div.appendChild(lbl);
+    const iw=document.createElement("div");iw.className="mobile-row-input";
+    if(row.type==="timesel"){iw.appendChild(makeTimeSelect(`${col}_${row.key}`,row.rangeKey));}
+    else if(row.type==="radio-lunch"){
+      const grp=document.createElement("div");grp.className="check-group";grp.style.alignItems="flex-start";
+      row.opts.forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;";const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_lunch_radio`;i.id=`${col}_lunch_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));grp.appendChild(l);});
+      const dw=document.createElement("div");dw.id=`${col}_lunchDetailWrap`;dw.style.cssText="display:none;margin-top:6px;padding:6px 8px;background:#EAF4FB;border-radius:6px;border:1px solid #C8DCF0;";
+      const dl=document.createElement("div");dl.style.cssText="font-size:.74rem;color:#2E6DA4;font-weight:600;margin-bottom:3px;";dl.textContent="學校午餐內容（可複選）";dw.appendChild(dl);
+      ["有炸物","有加工食品","與菜單相符"].forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:4px;font-size:.78rem;cursor:pointer;";const cb=document.createElement("input");cb.type="checkbox";cb.value=opt;cb.className=`cb_${col}_lunchDetail`;cb.style.cssText="width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";l.appendChild(cb);l.appendChild(document.createTextNode(" "+opt));dw.appendChild(l);});
+      grp.appendChild(dw);
+      setTimeout(()=>{grp.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb=>{rb.addEventListener("change",()=>{dw.style.display=(rb.value==="學校午餐"&&rb.checked)?"block":"none";if(rb.value!=="學校午餐")dw.style.display="none";});});const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);if(c?.value==="學校午餐")dw.style.display="block";},0);
+      iw.appendChild(grp);
+    } else if(row.type==="radio"){
+      const grp=document.createElement("div");grp.className="check-group";grp.style.alignItems="flex-start";
+      row.opts.forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;";const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_${row.key}_radio`;i.id=`${col}_${row.key}_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));grp.appendChild(l);});
+      iw.appendChild(grp);
+    } else if(row.type==="text"){const i=document.createElement("input");i.type="text";i.className="t-text";i.id=`${col}_${row.key}`;i.placeholder=row.ph||"";iw.appendChild(i);}
+    div.appendChild(iw);card.appendChild(div);
+  });
+
+  // 整週一次的欄位只在星期一顯示
+  if(dayIdx===0){
+    const onceDiv=document.createElement("div");onceDiv.style.cssText="padding:0 16px 16px;";
+    const onceClone=document.getElementById("onceSection").cloneNode(true);
+    onceClone.id="onceSectionMobile";
+    // 重新綁定 onchange
+    onceClone.querySelectorAll(".once_cb_cramSubjects").forEach(cb=>{cb.addEventListener("change",updateOnceVisMobile);});
+    onceClone.querySelectorAll('input[name="once_club_radio"]').forEach(rb=>{rb.addEventListener("change",updateOnceVisMobile);});
+    onceClone.querySelectorAll('input[name="once_work_radio"]').forEach(rb=>{rb.addEventListener("change",updateOnceVisMobile);});
+    onceDiv.appendChild(onceClone);card.appendChild(onceDiv);
+    setTimeout(()=>{syncOnceToMobile();updateOnceVisMobile();},0);
   }
 
-  if (copied) showToast("已複製星期一的起床／出門／到校時間到星期二～五 ✅", "success");
-  else showToast("請先填寫星期一的起床、出門或到校時間", "error-t");
-}
-
-// ════════════════════════════════════════════
-// 時間順序驗證（起床 ≤ 出門 ≤ 到校）
-// ════════════════════════════════════════════
-function timeToMin(val) {
-  if (!val) return null;
-  const [h, m] = val.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function validateTimeOrder(col) {
-  const wakeupEl = document.getElementById(`${col}_wakeup`);
-  const leaveEl  = document.getElementById(`${col}_leave`);
-  const arriveEl = document.getElementById(`${col}_arrive`);
-  if (!wakeupEl || !leaveEl || !arriveEl) return true;
-
-  const wakeup = timeToMin(wakeupEl.value);
-  const leave  = timeToMin(leaveEl.value);
-  const arrive = timeToMin(arriveEl.value);
-
-  if (wakeup !== null && leave !== null && leave < wakeup) {
-    showToast("出門時間不能早於起床時間，請重新確認", "error-t");
-    leaveEl.style.borderColor = "var(--error)";
-    return false;
-  }
-  if (leave !== null && arrive !== null && arrive < leave) {
-    showToast("到校時間不能早於出門時間，請重新確認", "error-t");
-    arriveEl.style.borderColor = "var(--error)";
-    return false;
-  }
-  // 清除錯誤樣式
-  [wakeupEl, leaveEl, arriveEl].forEach(el => el.style.borderColor = "");
-  return true;
-}
-
-// 驗證所有時間區間：結束不得早於或等於開始
-function validateAllTimeRanges() {
-  const rangeKeys = ["cram","study","club"]; // work/hw/game 可跨日，不驗證
-  const dayNames = { mon:"星期一", tue:"星期二", wed:"星期三", thu:"星期四", fri:"星期五" };
-  let allOk = true;
-  WEEKDAY_COLS.forEach(col => {
-    rangeKeys.forEach(key => {
-      const sEl = document.getElementById(`${col}_${key}Start`);
-      const eEl = document.getElementById(`${col}_${key}End`);
-      if (!sEl || !eEl) return;
-      if (!sEl.value || !eEl.value) return; // 留空視為無活動，跳過
-      const s = timeToMin(sEl.value);
-      const e = timeToMin(eEl.value);
-      if (e <= s) {
-        showToast(`${dayNames[col]} 的結束時間不能早於開始時間，請重新確認`, "error-t");
-        eEl.style.borderColor = "var(--error)";
-        allOk = false;
-      } else {
-        eEl.style.borderColor = "";
-      }
-    });
-  });
-  return allOk;
-}
-
-// 監聽早晨時間欄位變動即時驗證
-function setupTimeOrderValidation() {
-  WEEKDAY_COLS.forEach(col => {
-    ["wakeup","leave","arrive"].forEach(key => {
-      const el = document.getElementById(`${col}_${key}`);
-      if (el) el.addEventListener("change", () => validateTimeOrder(col));
-    });
-
-    // 同日驗證（cram/study/club：結束不得早於或等於開始）
-    ["cram","study","club"].forEach(key => {
-      const sEl = document.getElementById(`${col}_${key}Start`);
-      const eEl = document.getElementById(`${col}_${key}End`);
-      if (sEl && eEl) {
-        const check = () => {
-          if (!sEl.value || !eEl.value) { eEl.style.borderColor = ""; return; }
-          const s = timeToMin(sEl.value);
-          const e = timeToMin(eEl.value);
-          if (e <= s) {
-            eEl.style.borderColor = "var(--error)";
-            showToast("結束時間不能早於或等於開始時間", "error-t");
-          } else {
-            eEl.style.borderColor = "";
-          }
-        };
-        eEl.addEventListener("change", check);
-        sEl.addEventListener("change", check);
-      }
-    });
-
-    // 跨日驗證（work/hw/game：時段在 15:00～隔天07:00，結束不得早於開始）
-    ["work","hw","game"].forEach(key => {
-      const sEl = document.getElementById(`${col}_${key}Start`);
-      const eEl = document.getElementById(`${col}_${key}End`);
-      if (sEl && eEl) {
-        const check = () => {
-          if (!sEl.value || !eEl.value) { eEl.style.borderColor = ""; return; }
-          const s = timeToMin(sEl.value);
-          const e = timeToMin(eEl.value);
-          // 結束在 00:00～07:00（0～420）視為隔天，轉換為 e+1440 比較
-          const eAdj = (e <= 420) ? e + 1440 : e;
-          // 轉換後結束必須大於開始
-          if (eAdj <= s) {
-            eEl.style.borderColor = "var(--error)";
-            showToast("結束時間不能早於開始時間（隔天凌晨請選 00:00～07:00）", "error-t");
-          } else {
-            eEl.style.borderColor = "";
-          }
-        };
-        eEl.addEventListener("change", check);
-        sEl.addEventListener("change", check);
-      }
-    });
-  });
-}
-
-let currentDayIndex = 0;
-
-function isMobile() {
-  return window.innerWidth <= 700;
-}
-
-function buildMobileDayCard(dayIdx) {
-  const col = DAY_KEYS[dayIdx];
-  const card = document.getElementById("mobileDayCard");
-  card.innerHTML = "";
-
-  WEEKDAY_ROWS.forEach(row => {
-    if (row.type === "section") {
-      const hdr = document.createElement("div");
-      hdr.className = "mobile-section-header";
-      hdr.textContent = row.label;
-      card.appendChild(hdr);
-      return;
-    }
-    if (row.type === "merged-text") {
-      // 只在星期一顯示一次
-      if (dayIdx !== 0) return;
-      const div = document.createElement("div");
-      div.className = "mobile-row";
-      const lbl = document.createElement("div");
-      lbl.className = "mobile-row-label";
-      lbl.textContent = row.label;
-      const inp_wrap = document.createElement("div");
-      inp_wrap.className = "mobile-row-input";
-      const inp = document.createElement("input");
-      inp.type = "text";
-      inp.className = "t-text";
-      inp.id = `merged_${row.key}`;
-      inp.placeholder = (row.ph || "") + "（整週填一次）";
-      inp.style.maxWidth = "100%";
-      inp_wrap.appendChild(inp);
-      div.appendChild(lbl);
-      div.appendChild(inp_wrap);
-      card.appendChild(div);
-      return;
-    }
-
-    const div = document.createElement("div");
-    div.className = "mobile-row";
-
-    const lbl = document.createElement("div");
-    lbl.className = "mobile-row-label";
-    lbl.innerHTML = row.label + (row.sub ? `<span class="row-sublabel">${row.sub}</span>` : "");
-    div.appendChild(lbl);
-
-    const inp_wrap = document.createElement("div");
-    inp_wrap.className = "mobile-row-input";
-
-    if (row.type === "timesel" || row.type === "duration") {
-      const rKey = row.type === "duration" ? "duration" : row.rangeKey;
-      inp_wrap.appendChild(makeTimeSelect(`${col}_${row.key}`, rKey));
-
-    } else if (row.type === "timerange" || row.type === "timerange+check") {
-      const wrap = makeTimeRangeCell(col, row.key, row.rangeKey || "range");
-      // wrap 本身保持 align-items:center（箭頭置中），不覆寫
-      if (row.type === "timerange+check" && row.noOpt) {
-        const lbl2 = document.createElement("label");
-        lbl2.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;";
-        const cb = document.createElement("input");
-        cb.type = "checkbox"; cb.value = row.noOpt;
-        cb.className = `cb_${col}_${row.key}_no`;
-        cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);";
-        cb.addEventListener("change", () => { wrap.querySelectorAll("select").forEach(s => s.disabled = cb.checked); });
-        lbl2.appendChild(cb);
-        lbl2.appendChild(document.createTextNode(" " + row.noOpt));
-        wrap.appendChild(lbl2);
-      }
-      inp_wrap.appendChild(wrap);
-
-    } else if (row.type === "lunch-detail") {
-      // 已內嵌在 radio-lunch，跳過
-    } else if (row.type === "radio-lunch") {
-      const grp = document.createElement("div");
-      grp.className = "check-group";
-      grp.style.alignItems = "flex-start";
-      row.opts.forEach(opt => {
-        const l = document.createElement("label");
-        const i = document.createElement("input");
-        i.type = "radio"; i.value = opt;
-        i.name = `${col}_lunch_radio`; i.id = `${col}_lunch_${opt}`;
-        i.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
-        l.appendChild(i); l.appendChild(document.createTextNode(" " + opt));
-        grp.appendChild(l);
-      });
-      // 細節勾選
-      const detailWrap = document.createElement("div");
-      detailWrap.id = `${col}_lunchDetailWrap`;
-      detailWrap.style.cssText = "display:none;margin-top:6px;padding:6px 8px;background:#EAF4FB;border-radius:6px;border:1px solid #C8DCF0;";
-      const dlbl = document.createElement("div");
-      dlbl.style.cssText = "font-size:0.74rem;color:#2E6DA4;font-weight:600;margin-bottom:3px;";
-      dlbl.textContent = "學校午餐內容（可複選）";
-      detailWrap.appendChild(dlbl);
-      ["有炸物","有加工食品","與菜單相符"].forEach(opt => {
-        const l = document.createElement("label");
-        l.style.cssText = "display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;";
-        const cb = document.createElement("input");
-        cb.type = "checkbox"; cb.value = opt;
-        cb.className = `cb_${col}_lunchDetail`;
-        cb.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
-        l.appendChild(cb); l.appendChild(document.createTextNode(" " + opt));
-        detailWrap.appendChild(l);
-      });
-      grp.appendChild(detailWrap);
-      setTimeout(() => {
-        grp.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb => {
-          rb.addEventListener("change", () => {
-            detailWrap.style.display = (rb.value === "學校午餐" && rb.checked) ? "block" : "none";
-            if (rb.value !== "學校午餐") detailWrap.style.display = "none";
-          });
-        });
-        const checked = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
-        if (checked?.value === "學校午餐") detailWrap.style.display = "block";
-      }, 0);
-      inp_wrap.appendChild(grp);
-
-    } else if (row.type === "radio" || row.type === "radio+text"
-            || row.type === "check" || row.type === "check+text") {
-      const isRadio = row.type === "radio" || row.type === "radio+text";
-      const grp = document.createElement("div");
-      grp.className = "check-group";
-      grp.style.alignItems = "flex-start";
-      row.opts.forEach(opt => {
-        const l = document.createElement("label");
-        const i = document.createElement("input");
-        i.type = isRadio ? "radio" : "checkbox";
-        i.value = opt;
-        if (isRadio) { i.name = `${col}_${row.key}_radio`; i.id = `${col}_${row.key}_${opt}`; }
-        else { i.className = `cb_${col}_${row.key}`; }
-        i.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
-        l.appendChild(i); l.appendChild(document.createTextNode(" " + opt));
-        grp.appendChild(l);
-      });
-      if (row.type === "radio+text" || row.type === "check+text") {
-        const ti = document.createElement("input");
-        ti.type = "text"; ti.className = "t-text";
-        ti.id = `${col}_${row.textKey}`; ti.placeholder = row.ph || "";
-        ti.style.marginTop = "5px";
-        grp.appendChild(ti);
-      }
-      inp_wrap.appendChild(grp);
-
-    } else if (row.type === "text") {
-      const inp = document.createElement("input");
-      inp.type = "text"; inp.className = "t-text";
-      inp.id = `${col}_${row.key}`; inp.placeholder = row.ph || "";
-      inp_wrap.appendChild(inp);
-    }
-
-    div.appendChild(inp_wrap);
-    card.appendChild(div);
-  });
-  // 手機版：星期一底部加複製按鈕
-  if (dayIdx === 0) {
-    const copyDiv = document.createElement("div");
-    copyDiv.style.cssText = "padding:12px 16px;border-top:1px solid #EDF3FA;";
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "btn btn-secondary";
-    copyBtn.style.cssText = "font-size:0.82rem;padding:8px 16px;width:100%;";
-    copyBtn.textContent = "📋 將起床／出門／到校時間複製到星期二～五";
-    copyBtn.onclick = copyMonToAll;
-    copyDiv.appendChild(copyBtn);
-    card.appendChild(copyDiv);
+  // 複製按鈕
+  if(dayIdx===0){
+    const cd=document.createElement("div");cd.style.cssText="padding:12px 16px;border-top:1px solid #EDF3FA;";
+    const cb2=document.createElement("button");cb2.className="btn btn-secondary";cb2.style.cssText="font-size:.82rem;padding:8px 16px;width:100%;";cb2.textContent="📋 將起床／出門／到校時間複製到星期二～五";cb2.onclick=copyMonToAll;cd.appendChild(cb2);card.appendChild(cd);
   }
 }
 
-function switchDay(dir) {
-  currentDayIndex = Math.max(0, Math.min(4, currentDayIndex + dir));
-  updateDaySwitcher();
+// 同步主頁面 once 欄位值到手機版 clone
+function syncOnceToMobile(){
+  const src=document.getElementById("onceSection");const dst=document.getElementById("onceSectionMobile");if(!src||!dst)return;
+  src.querySelectorAll("select").forEach(el=>{const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
+  src.querySelectorAll("input[type=text]").forEach(el=>{const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
+  src.querySelectorAll("input[type=checkbox]").forEach(cb=>{const t=dst.querySelector(`#${cb.id}`);if(t)t.checked=cb.checked;});
+  src.querySelectorAll("input[type=radio]").forEach(rb=>{const t=dst.querySelector(`input[name="${rb.name}"][value="${rb.value}"]`);if(t)t.checked=rb.checked;});
+}
+// 手機版 once 欄位變更時同步回主頁面
+function syncMobileToOnce(){
+  const src=document.getElementById("onceSectionMobile");const dst=document.getElementById("onceSection");if(!src||!dst)return;
+  src.querySelectorAll("select").forEach(el=>{const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
+  src.querySelectorAll("input[type=text]").forEach(el=>{const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
+  src.querySelectorAll("input[type=checkbox]").forEach(cb=>{const t=dst.querySelector(`#${cb.id}`);if(t)t.checked=cb.checked;});
+  src.querySelectorAll("input[type=radio]").forEach(rb=>{const t=dst.querySelector(`input[name="${rb.name}"][value="${rb.value}"]`);if(t)t.checked=rb.checked;});
+  updateOnceVis();
+}
+function updateOnceVisMobile(){
+  syncMobileToOnce();
+  const mob=document.getElementById("onceSectionMobile");if(!mob)return;
+  const hasCram=mob.querySelectorAll(".once_cb_cramSubjects:checked").length>0;
+  const cw=mob.querySelector("#cramTotalWrap");if(cw)cw.style.display=hasCram?"block":"none";
+  const cy=mob.querySelector('input[name="once_club_radio"][value="是"]:checked');
+  const clw=mob.querySelector("#clubTotalWrap");if(clw)clw.style.display=cy?"block":"none";
+  const wy=mob.querySelector('input[name="once_work_radio"][value="有"]:checked');
+  const wdw=mob.querySelector("#workDetailWrap");if(wdw)wdw.style.display=wy?"block":"none";
 }
 
-function updateDaySwitcher() {
-  if (!isMobile()) return;
-  document.getElementById("dayLabel").textContent = DAY_NAMES[currentDayIndex];
-  document.getElementById("dayPrev").disabled = currentDayIndex === 0;
-  document.getElementById("dayNext").disabled = currentDayIndex === 4;
-  document.querySelectorAll(".dot").forEach((d, i) => {
-    d.classList.toggle("active", i === currentDayIndex);
-  });
-  buildMobileDayCard(currentDayIndex);
-  // 還原已填的值
-  restoreDraftToMobile();
-  // 重新掛上自動儲存監聽（每次重建卡片後監聽器會消失）
-  const card = document.getElementById("mobileDayCard");
-  if (card) {
-    card.addEventListener("change", saveDraft);
-    card.addEventListener("input",  saveDraft);
-  }
+function switchDay(dir){currentDayIndex=Math.max(0,Math.min(4,currentDayIndex+dir));updateDaySwitcher();}
+function updateDaySwitcher(){
+  if(!isMobile())return;
+  document.getElementById("dayLabel").textContent=DAY_NAMES[currentDayIndex];
+  document.getElementById("dayPrev").disabled=currentDayIndex===0;
+  document.getElementById("dayNext").disabled=currentDayIndex===4;
+  document.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("active",i===currentDayIndex));
+  buildMobileDayCard(currentDayIndex);restoreDraftToMobile();
+  const c=document.getElementById("mobileDayCard");if(c){c.addEventListener("change",()=>{syncMobileToOnce();saveDraft();});c.addEventListener("input",()=>{syncMobileToOnce();saveDraft();});}
 }
 
-// 點進度點也可切換
-document.querySelectorAll && document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".dot").forEach(d => {
-    d.addEventListener("click", () => {
-      currentDayIndex = parseInt(d.dataset.d);
-      updateDaySwitcher();
+function restoreDraftToMobile(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const draft=JSON.parse(raw);
+    const col=DAY_KEYS[currentDayIndex];
+    document.querySelectorAll("#mobileDayCard select").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
+    document.querySelectorAll("#mobileDayCard input[type=text]").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
+    document.querySelectorAll("#mobileDayCard input[type=checkbox],#mobileDayCard input[type=radio]").forEach(cb=>{
+      if(cb.type==="radio"&&cb.name){const k="radio__"+cb.name+"__"+cb.value;if(draft[k]!==undefined)cb.checked=draft[k];}
+      else{const k="cb__"+(cb.id||cb.className+"__"+cb.value);if(draft[k]!==undefined)cb.checked=draft[k];}
     });
-  });
-});
-
-// 手機版切換時還原已儲存的值
-function restoreDraftToMobile() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const draft = JSON.parse(raw);
-    const col = DAY_KEYS[currentDayIndex];
-    // selects
-    document.querySelectorAll("#mobileDayCard select").forEach(el => {
-      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
-    });
-    // text inputs
-    document.querySelectorAll("#mobileDayCard input[type=text]").forEach(el => {
-      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
-    });
-    // checkboxes / radios
-    document.querySelectorAll("#mobileDayCard input[type=checkbox], #mobileDayCard input[type=radio]").forEach(cb => {
-      if (cb.type === "radio" && cb.name) {
-        const key = "radio__" + cb.name + "__" + cb.value;
-        if (draft[key] !== undefined) cb.checked = draft[key];
-      } else {
-        const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
-        if (draft[key] !== undefined) cb.checked = draft[key];
-      }
-    });
-    // 還原學校午餐細節框的顯示狀態
-    const checkedLunch = document.querySelector(`input[name="${col}_lunch_radio"]:checked`);
-    const wrap = document.getElementById(`${col}_lunchDetailWrap`);
-    if (wrap) wrap.style.display = (checkedLunch?.value === "學校午餐") ? "block" : "none";
-  } catch(e) {}
+    const cl=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);const w=document.getElementById(`${col}_lunchDetailWrap`);if(w)w.style.display=(cl?.value==="學校午餐")?"block":"none";
+    if(currentDayIndex===0){syncOnceToMobile();updateOnceVisMobile();}
+  }catch(e){}
 }
 
-const WEEKEND_NAMES = ["星期六","星期日"];
-const WEEKEND_KEYS  = ["sat","sun"];
-let currentWeekendIndex = 0;
+const WEEKEND_NAMES=["星期六","星期日"];const WEEKEND_KEYS=["sat","sun"];let currentWeekendIndex=0;
 
-function buildMobileWeekendCard(dayIdx) {
-  const col = WEEKEND_KEYS[dayIdx];
-  const card = document.getElementById("mobileWeekendCard");
-  card.innerHTML = "";
-
-  WEEKEND_ROWS.forEach(row => {
-    if (row.type === "section") {
-      const hdr = document.createElement("div");
-      hdr.className = "mobile-section-header";
-      hdr.textContent = row.label;
-      card.appendChild(hdr);
-      return;
+function buildMobileWeekendCard(dayIdx){
+  const col=WEEKEND_KEYS[dayIdx];const card=document.getElementById("mobileWeekendCard");card.innerHTML="";
+  WEEKEND_ROWS.forEach(row=>{
+    if(row.type==="section"){const h=document.createElement("div");h.className="mobile-section-header";h.textContent=row.label;card.appendChild(h);return;}
+    if(row.type==="merged-text"){
+      if(dayIdx!==0)return;
+      const div=document.createElement("div");div.className="mobile-row";
+      const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.textContent=row.label;
+      const iw=document.createElement("div");iw.className="mobile-row-input";
+      const inp=document.createElement("input");inp.type="text";inp.className="t-text";inp.id=`merged_${row.key}`;inp.placeholder=(row.ph||"")+"（週末填一次）";inp.style.maxWidth="100%";
+      iw.appendChild(inp);div.appendChild(lbl);div.appendChild(iw);card.appendChild(div);return;
     }
-    if (row.type === "merged-text") {
-      if (dayIdx !== 0) return;
-      const div = document.createElement("div");
-      div.className = "mobile-row";
-      const lbl = document.createElement("div");
-      lbl.className = "mobile-row-label";
-      lbl.textContent = row.label;
-      const inp_wrap = document.createElement("div");
-      inp_wrap.className = "mobile-row-input";
-      const inp = document.createElement("input");
-      inp.type = "text"; inp.className = "t-text";
-      inp.id = `merged_${row.key}`;
-      inp.placeholder = (row.ph || "") + "（週末填一次）";
-      inp.style.maxWidth = "100%";
-      inp_wrap.appendChild(inp);
-      div.appendChild(lbl); div.appendChild(inp_wrap);
-      card.appendChild(div);
-      return;
-    }
-
-    const div = document.createElement("div");
-    div.className = "mobile-row";
-    const lbl = document.createElement("div");
-    lbl.className = "mobile-row-label";
-    lbl.innerHTML = row.label + (row.sub ? `<span class="row-sublabel">${row.sub}</span>` : "");
-    div.appendChild(lbl);
-
-    const inp_wrap = document.createElement("div");
-    inp_wrap.className = "mobile-row-input";
-
-    if (row.type === "timesel" || row.type === "duration") {
-      const rKey = row.type === "duration" ? "duration" : row.rangeKey;
-      inp_wrap.appendChild(makeTimeSelect(`${col}_${row.key}`, rKey));
-
-    } else if (row.type === "timerange") {
-      inp_wrap.appendChild(makeTimeRangeCell(col, row.key, row.rangeKey || "range"));
-
-    } else if (row.type === "dynamic_cram") {
-      const wrap = buildDynamicCram(col);
-      wrap.style.width = "100%";
-      inp_wrap.appendChild(wrap);
-
-    } else if (row.type === "check" || row.type === "check+text") {
-      const grp = document.createElement("div");
-      grp.className = "check-group";
-      grp.style.alignItems = "flex-start";
-      row.opts.forEach(opt => {
-        const l = document.createElement("label");
-        const i = document.createElement("input");
-        i.type = "checkbox"; i.value = opt;
-        i.className = `cb_${col}_${row.key}`;
-        i.style.cssText = "width:13px;height:13px;accent-color:var(--blue);cursor:pointer;";
-        l.appendChild(i); l.appendChild(document.createTextNode(" " + opt));
-        grp.appendChild(l);
-      });
-      inp_wrap.appendChild(grp);
-
-    } else if (row.type === "text") {
-      const inp = document.createElement("input");
-      inp.type = "text"; inp.className = "t-text";
-      inp.id = `${col}_${row.key}`; inp.placeholder = row.ph || "";
-      inp_wrap.appendChild(inp);
-    }
-
-    div.appendChild(inp_wrap);
-    card.appendChild(div);
+    const div=document.createElement("div");div.className="mobile-row";
+    const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.innerHTML=row.label+(row.sub?`<span class="row-sublabel">${row.sub}</span>`:"");div.appendChild(lbl);
+    const iw=document.createElement("div");iw.className="mobile-row-input";
+    if(row.type==="timesel"||row.type==="duration"){const rk=row.type==="duration"?"duration":row.rangeKey;iw.appendChild(makeTimeSelect(`${col}_${row.key}`,rk));}
+    else if(row.type==="timerange"){iw.appendChild(makeTimeRangeCell(col,row.key,row.rangeKey||"range"));}
+    else if(row.type==="dynamic_cram"){const w=buildDynamicCram(col);w.style.width="100%";iw.appendChild(w);}
+    else if(row.type==="text"){const i=document.createElement("input");i.type="text";i.className="t-text";i.id=`${col}_${row.key}`;i.placeholder=row.ph||"";iw.appendChild(i);}
+    div.appendChild(iw);card.appendChild(div);
   });
-
-  // 還原已儲存值
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const draft = JSON.parse(raw);
-    document.querySelectorAll("#mobileWeekendCard select").forEach(el => {
-      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
-    });
-    document.querySelectorAll("#mobileWeekendCard input[type=text]").forEach(el => {
-      if (el.id && draft[el.id] !== undefined) el.value = draft[el.id];
-    });
-    document.querySelectorAll("#mobileWeekendCard input[type=checkbox]").forEach(cb => {
-      const key = "cb__" + (cb.id || cb.className + "__" + cb.value);
-      if (draft[key] !== undefined) cb.checked = draft[key];
-    });
-  } catch(e) {}
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const draft=JSON.parse(raw);
+    document.querySelectorAll("#mobileWeekendCard select").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
+    document.querySelectorAll("#mobileWeekendCard input[type=text]").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
+    document.querySelectorAll("#mobileWeekendCard input[type=checkbox]").forEach(cb=>{const k="cb__"+(cb.id||cb.className+"__"+cb.value);if(draft[k]!==undefined)cb.checked=draft[k];});
+  }catch(e){}
 }
 
-function switchWeekendDay(dir) {
-  currentWeekendIndex = Math.max(0, Math.min(1, currentWeekendIndex + dir));
-  updateWeekendSwitcher();
-}
-
-function updateWeekendSwitcher() {
-  if (!isMobile()) return;
-  document.getElementById("weekendLabel").textContent = WEEKEND_NAMES[currentWeekendIndex];
-  document.getElementById("weekendPrev").disabled = currentWeekendIndex === 0;
-  document.getElementById("weekendNext").disabled = currentWeekendIndex === 1;
-  document.querySelectorAll("#weekendDots .dot").forEach((d, i) => {
-    d.classList.toggle("active", i === currentWeekendIndex);
-  });
+function switchWeekendDay(dir){currentWeekendIndex=Math.max(0,Math.min(1,currentWeekendIndex+dir));updateWeekendSwitcher();}
+function updateWeekendSwitcher(){
+  if(!isMobile())return;
+  document.getElementById("weekendLabel").textContent=WEEKEND_NAMES[currentWeekendIndex];
+  document.getElementById("weekendPrev").disabled=currentWeekendIndex===0;
+  document.getElementById("weekendNext").disabled=currentWeekendIndex===1;
+  document.querySelectorAll("#weekendDots .dot").forEach((d,i)=>d.classList.toggle("active",i===currentWeekendIndex));
   buildMobileWeekendCard(currentWeekendIndex);
-  // 重新掛上自動儲存監聽
-  const card = document.getElementById("mobileWeekendCard");
-  if (card) {
-    card.addEventListener("change", saveDraft);
-    card.addEventListener("input",  saveDraft);
-  }
+  const c=document.getElementById("mobileWeekendCard");if(c){c.addEventListener("change",saveDraft);c.addEventListener("input",saveDraft);}
 }
 
-// 週末進度點點擊
-window.addEventListener("resize", () => {
-  if (isMobile()) { updateDaySwitcher(); updateWeekendSwitcher(); }
-});
-buildTable(WEEKDAY_ROWS, WEEKDAY_COLS, "weekdayBody");
-buildTable(WEEKEND_ROWS, WEEKEND_COLS, "weekendBody");
+window.addEventListener("resize",()=>{if(isMobile()){updateDaySwitcher();updateWeekendSwitcher();}});
+
+// ── Init ──
+buildTable(WEEKDAY_ROWS,WEEKDAY_COLS,"weekdayBody");
+buildTable(WEEKEND_ROWS,WEEKEND_COLS,"weekendBody");
+initOnceSelects();
+updateOnceVis();
 updateProgress();
-
-// 手機版初始化
-if (isMobile()) {
-  updateDaySwitcher();
-  updateWeekendSwitcher();
-}
-
-// 時間順序驗證
+if(isMobile()){updateDaySwitcher();updateWeekendSwitcher();}
 setupTimeOrderValidation();
+document.querySelectorAll("#dayDots .dot").forEach(d=>{d.addEventListener("click",()=>{currentDayIndex=parseInt(d.dataset.d);updateDaySwitcher();});});
+document.querySelectorAll("#weekendDots .dot").forEach(d=>{d.addEventListener("click",()=>{currentWeekendIndex=parseInt(d.dataset.w);updateWeekendSwitcher();});});
 
-// 進度點點擊
-document.querySelectorAll("#dayDots .dot").forEach(d => {
-  d.addEventListener("click", () => { currentDayIndex = parseInt(d.dataset.d); updateDaySwitcher(); });
-});
-document.querySelectorAll("#weekendDots .dot").forEach(d => {
-  d.addEventListener("click", () => { currentWeekendIndex = parseInt(d.dataset.w); updateWeekendSwitcher(); });
-});
-
-// 檢查是否已填過
-if (checkAlreadySubmitted()) {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+if(checkAlreadySubmitted()){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page5").classList.add("active");
-  document.getElementById("progressFill").style.width = "100%";
-  document.getElementById("progressLabel").textContent = "已完成";
-} else {
-  restoreDraft();
-  setupAutosave();
-}
+  document.getElementById("progressFill").style.width="100%";
+  document.getElementById("progressLabel").textContent="已完成";
+}else{restoreDraft();setupAutosave();}
 </script>
 </body>
 </html>
-HTMLEOF
