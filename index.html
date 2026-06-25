@@ -211,7 +211,7 @@
       <div class="card-body" style="padding:0">
         <div class="schedule-wrap">
           <table class="schedule-table" id="weekdayTable">
-            <thead><tr><th>活動項目</th><th>星期一</th><th>星期二</th><th>星期三</th><th>星期四</th><th>星期五</th></tr></thead>
+            <thead><tr><th>活動項目</th></tr></thead>
             <tbody id="weekdayBody"></tbody>
           </table>
         </div>
@@ -431,8 +431,9 @@ const WEEKDAY_ROWS=[
   {key:"wakeup",  label:"大約都幾點起床？",   type:"once-merged", rangeKey:"wakeup"},
   {key:"leave",   label:"大概都幾點出門？",   type:"once-merged", rangeKey:"leave"},
   {key:"arrive",  label:"平均幾點到校？",     type:"once-merged", rangeKey:"arrive"},
-  {key:"morningExam",label:"早自習",sub:"考試科目（無則留空）",type:"text",ph:"科目名稱"},
+  {type:"days-header"},
   {type:"section",label:"二、在校"},
+  {key:"morningExam",label:"早自習",sub:"考試科目（無則留空）",type:"text",ph:"科目名稱"},
   {key:"lunch",label:"午餐",type:"radio-lunch",opts:["自帶便當","學校午餐","外食/訂便當","不吃"]},
   {key:"period8",label:"第八節內容",type:"radio",opts:["考試","上進度","複習","自習","無第八節"]},
   {key:"schoolEnd",label:"放學時間",type:"timesel",rangeKey:"schoolEnd"},
@@ -477,6 +478,15 @@ function buildTable(rows,cols,tbodyId){
     const tr=document.createElement("tr");
     if(row.type==="section"){
       tr.className="section-row";const td=document.createElement("td");td.colSpan=cols.length+1;td.textContent=row.label;tr.appendChild(td);
+    } else if(row.type==="days-header"){
+      // 插入星期欄位標題列
+      tr.className="section-row";
+      const th0=document.createElement("td");th0.style.cssText="background:#142C47;";tr.appendChild(th0);
+      cols.forEach((col,i)=>{
+        const th=document.createElement("td");
+        th.style.cssText="background:var(--navy);color:white;text-align:center;font-weight:600;font-size:.83rem;padding:8px 6px;letter-spacing:.04em;";
+        th.textContent=DAY_NAMES[i];tr.appendChild(th);
+      });
     } else if(row.type==="merged-text"){
       tr.className="data-row";const tl=document.createElement("td");tl.className="row-label";tl.innerHTML=row.label;tr.appendChild(tl);
       const tm=document.createElement("td");tm.colSpan=cols.length;tm.style.cssText="vertical-align:middle;padding:6px 10px;";
@@ -578,7 +588,7 @@ function collectData(){
   };
   WEEKDAY_COLS.forEach(col=>{
     WEEKDAY_ROWS.forEach(row=>{
-      if(row.type==="section")return;
+      if(row.type==="section"||row.type==="days-header"||row.type==="once-merged")return;
       if(row.type==="timesel"){const el=document.getElementById(`${col}_${row.key}`);data[`${col}_${row.key}`]=el?el.value:"";}
       else if(row.type==="radio-lunch"){const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);data[`${col}_lunch`]=c?c.value:"";data[`${col}_lunchDetail`]=[...document.querySelectorAll(`.cb_${col}_lunchDetail:checked`)].map(c=>c.value).join("、");}
       else if(row.type==="radio"){const c=document.querySelector(`input[name="${col}_${row.key}_radio"]:checked`);data[`${col}_${row.key}`]=c?c.value:"";}
@@ -698,6 +708,7 @@ function buildMobileDayCard(dayIdx){
   const col=DAY_KEYS[dayIdx];const card=document.getElementById("mobileDayCard");card.innerHTML="";
   WEEKDAY_ROWS.forEach(row=>{
     if(row.type==="section"){const h=document.createElement("div");h.className="mobile-section-header";h.textContent=row.label;card.appendChild(h);return;}
+    if(row.type==="days-header")return;
     if(row.type==="once-merged"){
       // 只在星期一顯示
       if(dayIdx!==0)return;
