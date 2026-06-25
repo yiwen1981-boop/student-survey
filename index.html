@@ -211,7 +211,7 @@
       <div class="card-body" style="padding:0">
         <div class="schedule-wrap">
           <table class="schedule-table" id="weekdayTable">
-            <thead><tr><th>活動項目</th></tr></thead>
+            <thead></thead>
             <tbody id="weekdayBody"></tbody>
           </table>
         </div>
@@ -481,7 +481,7 @@ function buildTable(rows,cols,tbodyId){
     } else if(row.type==="days-header"){
       // 插入星期欄位標題列
       tr.className="section-row";
-      const th0=document.createElement("td");th0.style.cssText="background:#142C47;";tr.appendChild(th0);
+      const th0=document.createElement("td");th0.style.cssText="background:#142C47;color:white;font-weight:600;font-size:.83rem;padding:8px 14px;letter-spacing:.04em;";th0.textContent="活動項目";tr.appendChild(th0);
       cols.forEach((col,i)=>{
         const th=document.createElement("td");
         th.style.cssText="background:var(--navy);color:white;text-align:center;font-weight:600;font-size:.83rem;padding:8px 6px;letter-spacing:.04em;";
