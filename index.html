@@ -115,7 +115,7 @@
 
 <header class="site-header">
   <h1>📋 學生一週生活作息調查</h1>
-  <p>國中 ／ 高中版 ・ 請根據上週實際情況填寫</p>
+  <p>國中 ／ 高中版 ・ 請依據學期間沒有放假的一週實際生活作息填寫</p>
 </header>
 
 <div class="progress-wrap">
@@ -220,7 +220,7 @@
         <div class="once-section" id="onceSection">
           <table class="once-table">
             <tbody>
-              <tr class="once-section-row"><td colspan="2">📌 一、早晨平均時間（整週只填一次）</td></tr>
+              <tr class="once-section-row"><td colspan="2">📌 一、早晨平均時間</td></tr>
 
               <tr class="once-row">
                 <td class="once-label-cell">大約都幾點起床？</td>
@@ -235,7 +235,7 @@
                 <td class="once-input-cell"><select id="once_arrive" class="once-select"></select></td>
               </tr>
 
-              <tr class="once-section-row"><td colspan="2">📌 三、放學後（整週只填一次）</td></tr>
+              <tr class="once-section-row"><td colspan="2">📌 三、放學後</td></tr>
 
               <!-- 補習科目 -->
               <tr class="once-row">
@@ -520,11 +520,6 @@ function buildTable(rows,cols,tbodyId){
       });
     }
     tbody.appendChild(tr);
-    if(row.key==="morningExam"&&tbodyId==="weekdayBody"){
-      const cr=document.createElement("tr");cr.className="data-row";cr.id="copyRow";
-      const ct=document.createElement("td");ct.colSpan=cols.length+1;ct.style.cssText="padding:8px 14px;background:#F0F8FF;";
-      const cb=document.createElement("button");cb.className="btn btn-secondary";cb.style.cssText="font-size:.82rem;padding:7px 16px;";cb.textContent="📋 將星期一的起床／出門／到校時間複製到星期二～五";cb.onclick=copyMonToAll;ct.appendChild(cb);cr.appendChild(ct);tbody.appendChild(cr);
-    }
   });
 }
 
@@ -739,12 +734,6 @@ function buildMobileDayCard(dayIdx){
     onceClone.querySelectorAll('input[name="once_work_radio"]').forEach(rb=>{rb.addEventListener("change",updateOnceVisMobile);});
     onceDiv.appendChild(onceClone);card.appendChild(onceDiv);
     setTimeout(()=>{syncOnceToMobile();updateOnceVisMobile();},0);
-  }
-
-  // 複製按鈕
-  if(dayIdx===0){
-    const cd=document.createElement("div");cd.style.cssText="padding:12px 16px;border-top:1px solid #EDF3FA;";
-    const cb2=document.createElement("button");cb2.className="btn btn-secondary";cb2.style.cssText="font-size:.82rem;padding:8px 16px;width:100%;";cb2.textContent="📋 將起床／出門／到校時間複製到星期二～五";cb2.onclick=copyMonToAll;cd.appendChild(cb2);card.appendChild(cd);
   }
 }
 
