@@ -220,21 +220,6 @@
         <div class="once-section" id="onceSection">
           <table class="once-table">
             <tbody>
-              <tr class="once-section-row"><td colspan="2">📌 一、早晨平均時間</td></tr>
-
-              <tr class="once-row">
-                <td class="once-label-cell">大約都幾點起床？</td>
-                <td class="once-input-cell"><select id="once_wakeup" class="once-select"></select></td>
-              </tr>
-              <tr class="once-row">
-                <td class="once-label-cell">大概都幾點出門？</td>
-                <td class="once-input-cell"><select id="once_leave" class="once-select"></select></td>
-              </tr>
-              <tr class="once-row">
-                <td class="once-label-cell">平均幾點到校？</td>
-                <td class="once-input-cell"><select id="once_arrive" class="once-select"></select></td>
-              </tr>
-
               <tr class="once-section-row"><td colspan="2">📌 三、放學後</td></tr>
 
               <!-- 補習科目 -->
@@ -443,6 +428,9 @@ function makeTimeRangeCell(col,key,rangeKey="range"){
 // ── 表格定義（每天各填的部分）──
 const WEEKDAY_ROWS=[
   {type:"section",label:"一、早晨"},
+  {key:"wakeup",  label:"大約都幾點起床？",   type:"once-merged", rangeKey:"wakeup"},
+  {key:"leave",   label:"大概都幾點出門？",   type:"once-merged", rangeKey:"leave"},
+  {key:"arrive",  label:"平均幾點到校？",     type:"once-merged", rangeKey:"arrive"},
   {key:"morningExam",label:"早自習",sub:"考試科目（無則留空）",type:"text",ph:"科目名稱"},
   {type:"section",label:"二、在校"},
   {key:"lunch",label:"午餐",type:"radio-lunch",opts:["自帶便當","學校午餐","外食/訂便當","不吃"]},
@@ -493,6 +481,14 @@ function buildTable(rows,cols,tbodyId){
       tr.className="data-row";const tl=document.createElement("td");tl.className="row-label";tl.innerHTML=row.label;tr.appendChild(tl);
       const tm=document.createElement("td");tm.colSpan=cols.length;tm.style.cssText="vertical-align:middle;padding:6px 10px;";
       const inp=document.createElement("input");inp.type="text";inp.className="t-text";inp.id=`merged_${row.key}`;inp.placeholder=row.ph||"";inp.style.width="100%";tm.appendChild(inp);tr.appendChild(tm);
+    } else if(row.type==="once-merged"){
+      // 整週只填一次，跨欄顯示一個 select，id 用 once_ 前綴
+      tr.className="data-row";
+      const tl=document.createElement("td");tl.className="row-label";tl.innerHTML=row.label;tr.appendChild(tl);
+      const tm=document.createElement("td");tm.colSpan=cols.length;tm.style.cssText="vertical-align:middle;padding:6px 10px;";
+      const sel=document.createElement("select");sel.className="once-select";sel.id=`once_${row.key}`;
+      (TIME_RANGES[row.rangeKey]||[]).forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t===""?"── 選擇 ──":t;sel.appendChild(o);});
+      tm.appendChild(sel);tr.appendChild(tm);
     } else {
       tr.className="data-row";const tl=document.createElement("td");tl.className="row-label";tl.innerHTML=row.label+(row.sub?`<span class="row-sublabel">${row.sub}</span>`:"");tr.appendChild(tl);
       cols.forEach(col=>{
@@ -702,6 +698,16 @@ function buildMobileDayCard(dayIdx){
   const col=DAY_KEYS[dayIdx];const card=document.getElementById("mobileDayCard");card.innerHTML="";
   WEEKDAY_ROWS.forEach(row=>{
     if(row.type==="section"){const h=document.createElement("div");h.className="mobile-section-header";h.textContent=row.label;card.appendChild(h);return;}
+    if(row.type==="once-merged"){
+      // 只在星期一顯示
+      if(dayIdx!==0)return;
+      const div=document.createElement("div");div.className="mobile-row";
+      const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.textContent=row.label;
+      const iw=document.createElement("div");iw.className="mobile-row-input";
+      const sel=document.createElement("select");sel.className="once-select";sel.id=`once_${row.key}`;
+      (TIME_RANGES[row.rangeKey]||[]).forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t===""?"── 選擇 ──":t;sel.appendChild(o);});
+      iw.appendChild(sel);div.appendChild(lbl);div.appendChild(iw);card.appendChild(div);return;
+    }
     const div=document.createElement("div");div.className="mobile-row";
     const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.innerHTML=row.label+(row.sub?`<span class="row-sublabel">${row.sub}</span>`:"");div.appendChild(lbl);
     const iw=document.createElement("div");iw.className="mobile-row-input";
