@@ -125,7 +125,7 @@
   <div class="page active" id="page1">
     <div class="info-card">
       國家人權委員會為了解學生休息休閒等發展權利的情形，希望邀請您填寫一週作息。包括睡眠、補習、休閒等時間分配。<br>
-      請根據<strong>六月間沒有遇到放假完整一週的實際作息情況</strong>填寫，不需要填寫「理想中」的狀況。全部填完約 5–8 分鐘。<br>
+      請根據<strong>六月間完整上學的一週實際作息情況</strong>填寫，不需要填寫「理想中」的狀況。全部填完約 5–8 分鐘。<br>
       資料僅供研究統計使用，不會對外公開，謝謝您的幫忙！
     </div>
     <div class="card">
@@ -483,6 +483,8 @@ function goPage(n){
   document.getElementById("page"+currentPage).classList.remove("active");
   currentPage=n;document.getElementById("page"+currentPage).classList.add("active");
   updateProgress();window.scrollTo({top:0,behavior:"smooth"});
+  // 手機版回到第2頁時重建 mobileDayCard 並還原資料
+  if(n===2&&isMobile())updateDaySwitcher();
 }
 function updateProgress(){
   const pct=((currentPage-1)/TOTAL_PAGES*100).toFixed(0);
@@ -592,7 +594,7 @@ function restoreDraft(){
     document.querySelectorAll("#page2 input[type=radio]").forEach(rb=>{const k="radio__"+rb.name+"__"+rb.value;if(draft[k]!==undefined)rb.checked=draft[k];});
     WEEKDAY_COLS.forEach(col=>{const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);const w=document.getElementById(`${col}_lunchDetailWrap`);if(w)w.style.display=(c?.value==="學校午餐")?"block":"none";});
     updateOnceVis();
-    if(draft["_page"]&&draft["_page"]>1){currentPage=draft["_page"];document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById("page"+currentPage).classList.add("active");updateProgress();showToast("已為您還原上次填寫的進度 📋");}
+    if(draft["_page"]&&draft["_page"]>1){currentPage=draft["_page"];document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById("page"+currentPage).classList.add("active");updateProgress();showToast("已為您還原上次填寫的進度 📋");if(currentPage===2&&isMobile())updateDaySwitcher();}
   }catch(e){}
 }
 function setupAutosave(){
@@ -603,17 +605,6 @@ function lockSubmitted(){try{localStorage.setItem(SUBMITTED_KEY,"1");}catch(e){}
 function checkAlreadySubmitted(){try{return localStorage.getItem(SUBMITTED_KEY)==="1";}catch(e){return false;}}
 // ── 驗證 ──
 function timeToMin(v){if(!v)return null;const[h,m]=v.split(":").map(Number);return h*60+m;}
-// 電腦版：整週一次的起床/出門/到校順序驗證
-function validateOnceTimeOrder(){
-  const we=document.getElementById("once_wakeup");
-  const le=document.getElementById("once_leave");
-  const ae=document.getElementById("once_arrive");
-  if(!we||!le||!ae)return true;
-  const w=timeToMin(we.value),l=timeToMin(le.value),a=timeToMin(ae.value);
-  if(w!==null&&l!==null&&l<w){showToast("出門時間不能早於起床時間，請重新確認","error-t");le.style.borderColor="var(--error)";return false;}
-  if(l!==null&&a!==null&&a<l){showToast("到校時間不能早於出門時間，請重新確認","error-t");ae.style.borderColor="var(--error)";return false;}
-  [we,le,ae].forEach(el=>el.style.borderColor="");return true;
-}
 // 電腦版：整週一次的起床/出門/到校順序驗證
 function validateOnceTimeOrder(){
   const we=document.getElementById("once_wakeup");
