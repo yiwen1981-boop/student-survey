@@ -788,6 +788,8 @@ function updateOnceVisMobile(){
 function mobileStepGo(dir){
   // 從「一、早晨」要前進到「在校」之前，驗證起床/出門/到校的時間順序（與電腦版邏輯一致，只檢查順序，不強制必填）
   if(mobileStep===0&&dir>0){
+    // 先清除舊的錯誤樣式，避免修正後仍殘留紅框造成誤判
+    ["once_wakeup","once_leave","once_arrive"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.borderColor="";});
     if(!validateOnceTimeOrder())return;
   }
   // 離開目前步驟前先存檔
@@ -803,7 +805,8 @@ function mobileStepGo(dir){
 function renderMobileStep(){
   document.getElementById("mobileStepLabel").textContent=`📌 步驟 ${mobileStep+1}／${MOBILE_TOTAL_STEPS}：${MOBILE_STEP_LABELS[mobileStep]}`;
   document.getElementById("mobileStepPrev").style.visibility=mobileStep===0?"hidden":"visible";
-  document.getElementById("mobileStepNext").textContent=mobileStep===2?"完成 ✓":"下一步 →";
+  // 放學後（最後一步）不需要「下一步/完成」按鈕，請改用頁面下方的「下一步：週末作息」進入下一頁
+  document.getElementById("mobileStepNext").style.display=mobileStep===2?"none":"block";
   buildMobileStep(mobileStep);
   restoreDraftToMobile();
   const c=document.getElementById("mobileDayCard");
