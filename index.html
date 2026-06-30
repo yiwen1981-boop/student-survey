@@ -754,9 +754,11 @@ function buildMobileStep(step){
     // 三、放學後
     const onceClone=document.getElementById("onceSection").cloneNode(true);
     onceClone.id="onceSectionMobile";
+    // clone 出來的 radio name 若與電腦版相同，瀏覽器會把兩邊視為同一組單選，導致互相干擾無法點選，
+    // 因此手機版 clone 的 radio 一律改名（加上 _m 後綴），並同步調整事件監聽用的 selector
+    onceClone.querySelectorAll('input[name="once_club_radio"]').forEach(rb=>{rb.name="once_club_radio_m";rb.addEventListener("change",updateOnceVisMobile);});
+    onceClone.querySelectorAll('input[name="once_work_radio"]').forEach(rb=>{rb.name="once_work_radio_m";rb.addEventListener("change",updateOnceVisMobile);});
     onceClone.querySelectorAll(".once_cb_cramSubjects").forEach(cb=>{cb.addEventListener("change",updateOnceVisMobile);});
-    onceClone.querySelectorAll('input[name="once_club_radio"]').forEach(rb=>{rb.addEventListener("change",updateOnceVisMobile);});
-    onceClone.querySelectorAll('input[name="once_work_radio"]').forEach(rb=>{rb.addEventListener("change",updateOnceVisMobile);});
     card.appendChild(onceClone);
     setTimeout(()=>{syncOnceToMobile();updateOnceVisMobile();},0);
   }
@@ -766,22 +768,34 @@ function syncOnceToMobile(){
   src.querySelectorAll("select").forEach(el=>{if(!el.id)return;const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
   src.querySelectorAll("input[type=text]").forEach(el=>{if(!el.id)return;const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
   src.querySelectorAll("input[type=checkbox]").forEach(cb=>{if(!cb.id)return;const t=dst.querySelector(`#${cb.id}`);if(t)t.checked=cb.checked;});
-  src.querySelectorAll("input[type=radio]").forEach(rb=>{if(!rb.name)return;const t=dst.querySelector(`input[name="${rb.name}"][value="${rb.value}"]`);if(t)t.checked=rb.checked;});
+  // 電腦版 radio（once_club_radio / once_work_radio）對應手機版 clone 後改名的（加 _m 後綴）
+  src.querySelectorAll("input[type=radio]").forEach(rb=>{
+    if(!rb.name)return;
+    const mobileName=(rb.name==="once_club_radio"||rb.name==="once_work_radio")?rb.name+"_m":rb.name;
+    const t=dst.querySelector(`input[name="${mobileName}"][value="${rb.value}"]`);
+    if(t)t.checked=rb.checked;
+  });
 }
 function syncMobileToOnce(){
   const src=document.getElementById("onceSectionMobile");const dst=document.getElementById("onceSection");if(!src||!dst)return;
   src.querySelectorAll("select").forEach(el=>{if(!el.id)return;const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
   src.querySelectorAll("input[type=text]").forEach(el=>{if(!el.id)return;const t=dst.querySelector(`#${el.id}`);if(t)t.value=el.value;});
   src.querySelectorAll("input[type=checkbox]").forEach(cb=>{if(!cb.id)return;const t=dst.querySelector(`#${cb.id}`);if(t)t.checked=cb.checked;});
-  src.querySelectorAll("input[type=radio]").forEach(rb=>{if(!rb.name)return;const t=dst.querySelector(`input[name="${rb.name}"][value="${rb.value}"]`);if(t)t.checked=rb.checked;});
+  // 手機版 clone 改名的 radio（_m 後綴）對應回電腦版原本的 name
+  src.querySelectorAll("input[type=radio]").forEach(rb=>{
+    if(!rb.name)return;
+    const desktopName=rb.name.endsWith("_m")?rb.name.slice(0,-2):rb.name;
+    const t=dst.querySelector(`input[name="${desktopName}"][value="${rb.value}"]`);
+    if(t)t.checked=rb.checked;
+  });
   updateOnceVis();
 }
 function updateOnceVisMobile(){
   syncMobileToOnce();
   const mob=document.getElementById("onceSectionMobile");if(!mob)return;
-  const cy=mob.querySelector('input[name="once_club_radio"][value="是"]:checked');
+  const cy=mob.querySelector('input[name="once_club_radio_m"][value="是"]:checked');
   const clw=mob.querySelector("#clubTotalWrap");if(clw)clw.style.display=cy?"block":"none";
-  const wy=mob.querySelector('input[name="once_work_radio"][value="有"]:checked');
+  const wy=mob.querySelector('input[name="once_work_radio_m"][value="有"]:checked');
   const wdw=mob.querySelector("#workDetailWrap");if(wdw)wdw.style.display=wy?"block":"none";
 }
 
