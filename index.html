@@ -188,16 +188,21 @@
   </div>
   <!-- PAGE 2 -->
   <div class="page" id="page2">
-    <div class="page-note">
+    <div class="page-note" id="page2NoteDesktop">
       📅 <strong>平日作息（星期一～五）</strong><br>
       📌 第二大項「在校」的題目<strong>請每天填寫</strong>。
     </div>
-    <div class="day-switcher" id="daySwitcher">
+    <!-- 手機版：步驟說明（取代原本左右切換） -->
+    <div class="page-note" id="mobileStepNote" style="display:none;">
+      📅 <strong>平日作息（星期一～五）</strong><br>
+      <span id="mobileStepLabel">📌 步驟 1／7：一、早晨</span>
+    </div>
+    <div class="day-switcher" id="daySwitcher" style="display:none;">
       <button class="day-nav" id="dayPrev" onclick="switchDay(-1)">&#8592;</button>
       <span class="day-label" id="dayLabel">星期一</span>
       <button class="day-nav" id="dayNext" onclick="switchDay(1)">&#8594;</button>
     </div>
-    <div class="day-dots" id="dayDots">
+    <div class="day-dots" id="dayDots" style="display:none;">
       <span class="dot active" data-d="0"></span><span class="dot" data-d="1"></span><span class="dot" data-d="2"></span><span class="dot" data-d="3"></span><span class="dot" data-d="4"></span>
     </div>
     <div class="card">
@@ -210,6 +215,11 @@
           </table>
         </div>
         <div class="mobile-day-card" id="mobileDayCard"></div>
+        <!-- 手機版：步驟上一步/下一步按鈕 -->
+        <div id="mobileStepNav" style="display:none;padding:14px 16px;display:flex;gap:10px;border-top:1px solid #EDF3FA;">
+          <button class="btn btn-secondary" id="mobileStepPrev" style="flex:1;" onclick="mobileStepGo(-1)">← 上一步</button>
+          <button class="btn btn-primary" id="mobileStepNext" style="flex:1;" onclick="mobileStepGo(1)">下一步 →</button>
+        </div>
         <!-- 放學後：整週只填一次 -->
         <div class="once-section" id="onceSection">
           <table class="once-table">
@@ -478,13 +488,13 @@ let currentPage=1;const TOTAL_PAGES=3;
 function goPage(n){
   if(n>currentPage&&!validatePage(currentPage))return;
   if(n>currentPage&&currentPage===2){
-    if(isMobile()&&currentDayIndex<4){showToast(`請先完成 ${DAY_NAMES.slice(currentDayIndex+1).join("、")} 的填答，再進入下一步`,"error-t");return;}
+    if(isMobile()&&mobileStep<6){showToast(`請先完成「${MOBILE_STEP_LABELS[mobileStep]}」之後的步驟，再進入下一步`,"error-t");return;}
   }
   document.getElementById("page"+currentPage).classList.remove("active");
   currentPage=n;document.getElementById("page"+currentPage).classList.add("active");
   updateProgress();window.scrollTo({top:0,behavior:"smooth"});
   // 手機版回到第2頁時重建 mobileDayCard 並還原資料
-  if(n===2&&isMobile())updateDaySwitcher();
+  if(n===2&&isMobile())initMobilePage2();
 }
 function updateProgress(){
   const pct=((currentPage-1)/TOTAL_PAGES*100).toFixed(0);
@@ -594,7 +604,7 @@ function restoreDraft(){
     document.querySelectorAll("#page2 input[type=radio]").forEach(rb=>{const k="radio__"+rb.name+"__"+rb.value;if(draft[k]!==undefined)rb.checked=draft[k];});
     WEEKDAY_COLS.forEach(col=>{const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);const w=document.getElementById(`${col}_lunchDetailWrap`);if(w)w.style.display=(c?.value==="學校午餐")?"block":"none";});
     updateOnceVis();
-    if(draft["_page"]&&draft["_page"]>1){currentPage=draft["_page"];document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById("page"+currentPage).classList.add("active");updateProgress();showToast("已為您還原上次填寫的進度 📋");if(currentPage===2&&isMobile())updateDaySwitcher();}
+    if(draft["_page"]&&draft["_page"]>1){currentPage=draft["_page"];document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById("page"+currentPage).classList.add("active");updateProgress();showToast("已為您還原上次填寫的進度 📋");if(currentPage===2&&isMobile())initMobilePage2();}
   }catch(e){}
 }
 function setupAutosave(){
@@ -623,59 +633,60 @@ function setupTimeOrderValidation(){
   });
 }
 // ── 手機版 ──
-let currentDayIndex=0;
+// ── 手機版：步驟導引（0=早晨,1~5=在校星期一~五,6=放學後）──
+let mobileStep=0;
+const MOBILE_STEP_LABELS=["一、早晨","二、在校（星期一）","二、在校（星期二）","二、在校（星期三）","二、在校（星期四）","二、在校（星期五）","三、放學後"];
+
 function isMobile(){return window.innerWidth<=700;}
-function buildMobileDayCard(dayIdx){
-  const col=DAY_KEYS[dayIdx];const card=document.getElementById("mobileDayCard");card.innerHTML="";
-  WEEKDAY_ROWS.forEach(row=>{
-    if(row.type==="section"){
-      // 一、早晨：只在星期一顯示
-      if(row.label.startsWith("一、")&&dayIdx!==0)return;
-      const h=document.createElement("div");h.className="mobile-section-header";
-      // 二、在校：標題加上【星期X】
-      h.textContent=row.label.startsWith("二、")?row.label+"　【"+DAY_NAMES[dayIdx]+"】":row.label;
-      card.appendChild(h);return;
-    }
-    if(row.type==="days-header")return;
-    if(row.type==="once-merged"){
-      // 只在星期一顯示
-      if(dayIdx!==0)return;
+
+function buildMobileStep(step){
+  const card=document.getElementById("mobileDayCard");card.innerHTML="";
+
+  if(step===0){
+    // 一、早晨
+    WEEKDAY_ROWS.forEach(row=>{
+      if(row.type==="once-merged"){
+        const div=document.createElement("div");div.className="mobile-row";
+        const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.textContent=row.label;
+        const iw=document.createElement("div");iw.className="mobile-row-input";
+        const sel=document.createElement("select");sel.className="once-select";sel.id=`once_${row.key}`;
+        (TIME_RANGES[row.rangeKey]||[]).forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t===""?"── 選擇 ──":t;sel.appendChild(o);});
+        iw.appendChild(sel);div.appendChild(lbl);div.appendChild(iw);card.appendChild(div);
+      }
+    });
+  } else if(step>=1&&step<=5){
+    // 二、在校：星期一～五
+    const dayIdx=step-1;const col=DAY_KEYS[dayIdx];
+    WEEKDAY_ROWS.forEach(row=>{
+      if(row.type==="section"||row.type==="days-header"||row.type==="once-merged")return;
       const div=document.createElement("div");div.className="mobile-row";
-      const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.textContent=row.label;
+      const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.innerHTML=row.label+(row.sub?`<span class="row-sublabel">${row.sub}</span>`:"");div.appendChild(lbl);
       const iw=document.createElement("div");iw.className="mobile-row-input";
-      const sel=document.createElement("select");sel.className="once-select";sel.id=`once_${row.key}`;
-      (TIME_RANGES[row.rangeKey]||[]).forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t===""?"── 選擇 ──":t;sel.appendChild(o);});
-      iw.appendChild(sel);div.appendChild(lbl);div.appendChild(iw);card.appendChild(div);return;
-    }
-    const div=document.createElement("div");div.className="mobile-row";
-    const lbl=document.createElement("div");lbl.className="mobile-row-label";lbl.innerHTML=row.label+(row.sub?`<span class="row-sublabel">${row.sub}</span>`:"");div.appendChild(lbl);
-    const iw=document.createElement("div");iw.className="mobile-row-input";
-    if(row.type==="timesel"){iw.appendChild(makeTimeSelect(`${col}_${row.key}`,row.rangeKey));}
-    else if(row.type==="radio-lunch"){
-      const grp=document.createElement("div");grp.className="check-group";grp.style.alignItems="flex-start";
-      row.opts.forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;";const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_lunch_radio`;i.id=`${col}_lunch_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:#8B3A1E;cursor:pointer;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));grp.appendChild(l);});
-      const dw=document.createElement("div");dw.id=`${col}_lunchDetailWrap`;dw.style.cssText="display:none;margin-top:6px;padding:6px 8px;background:#FDF0E8;border-radius:6px;border:1px solid #E8C4A8;";
-      const dl=document.createElement("div");dl.style.cssText="font-size:.74rem;color:#8B3A1E;font-weight:600;margin-bottom:3px;";dl.textContent="學校午餐內容（可複選）";dw.appendChild(dl);
-      ["有炸物","有加工食品","與菜單相符"].forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:4px;font-size:.78rem;cursor:pointer;";const cb=document.createElement("input");cb.type="checkbox";cb.value=opt;cb.className=`cb_${col}_lunchDetail`;cb.style.cssText="width:13px;height:13px;accent-color:#8B3A1E;cursor:pointer;";l.appendChild(cb);l.appendChild(document.createTextNode(" "+opt));dw.appendChild(l);});
-      grp.appendChild(dw);
-      setTimeout(()=>{grp.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb=>{rb.addEventListener("change",()=>{dw.style.display=(rb.value==="學校午餐"&&rb.checked)?"block":"none";if(rb.value!=="學校午餐")dw.style.display="none";});});const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);if(c?.value==="學校午餐")dw.style.display="block";},0);
-      iw.appendChild(grp);
-    } else if(row.type==="radio"){
-      const grp=document.createElement("div");grp.className="check-group";grp.style.alignItems="flex-start";
-      row.opts.forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;";const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_${row.key}_radio`;i.id=`${col}_${row.key}_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:#8B3A1E;cursor:pointer;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));grp.appendChild(l);});
-      iw.appendChild(grp);
-    } else if(row.type==="text"){const i=document.createElement("input");i.type="text";i.className="t-text";i.id=`${col}_${row.key}`;i.placeholder=row.ph||"";iw.appendChild(i);}
-    div.appendChild(iw);card.appendChild(div);
-  });
-  // 三、放學後：只在星期一顯示
-  if(dayIdx===0){
-    const onceDiv=document.createElement("div");onceDiv.style.cssText="padding:0 16px 16px;";
+      if(row.type==="timesel"){iw.appendChild(makeTimeSelect(`${col}_${row.key}`,row.rangeKey));}
+      else if(row.type==="radio-lunch"){
+        const grp=document.createElement("div");grp.className="check-group";grp.style.alignItems="flex-start";
+        row.opts.forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;";const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_lunch_radio`;i.id=`${col}_lunch_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:#8B3A1E;cursor:pointer;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));grp.appendChild(l);});
+        const dw=document.createElement("div");dw.id=`${col}_lunchDetailWrap`;dw.style.cssText="display:none;margin-top:6px;padding:6px 8px;background:#FDF0E8;border-radius:6px;border:1px solid #E8C4A8;";
+        const dl=document.createElement("div");dl.style.cssText="font-size:.74rem;color:#8B3A1E;font-weight:600;margin-bottom:3px;";dl.textContent="學校午餐內容（可複選）";dw.appendChild(dl);
+        ["有炸物","有加工食品","與菜單相符"].forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:4px;font-size:.78rem;cursor:pointer;";const cb=document.createElement("input");cb.type="checkbox";cb.value=opt;cb.className=`cb_${col}_lunchDetail`;cb.style.cssText="width:13px;height:13px;accent-color:#8B3A1E;cursor:pointer;";l.appendChild(cb);l.appendChild(document.createTextNode(" "+opt));dw.appendChild(l);});
+        grp.appendChild(dw);
+        setTimeout(()=>{grp.querySelectorAll(`input[name="${col}_lunch_radio"]`).forEach(rb=>{rb.addEventListener("change",()=>{dw.style.display=(rb.value==="學校午餐"&&rb.checked)?"block":"none";if(rb.value!=="學校午餐")dw.style.display="none";});});const c=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);if(c?.value==="學校午餐")dw.style.display="block";},0);
+        iw.appendChild(grp);
+      } else if(row.type==="radio"){
+        const grp=document.createElement("div");grp.className="check-group";grp.style.alignItems="flex-start";
+        row.opts.forEach(opt=>{const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:5px;font-size:.85rem;cursor:pointer;";const i=document.createElement("input");i.type="radio";i.value=opt;i.name=`${col}_${row.key}_radio`;i.id=`${col}_${row.key}_${opt}`;i.style.cssText="width:13px;height:13px;accent-color:#8B3A1E;cursor:pointer;";l.appendChild(i);l.appendChild(document.createTextNode(" "+opt));grp.appendChild(l);});
+        iw.appendChild(grp);
+      } else if(row.type==="text"){const i=document.createElement("input");i.type="text";i.className="t-text";i.id=`${col}_${row.key}`;i.placeholder=row.ph||"";iw.appendChild(i);}
+      div.appendChild(iw);card.appendChild(div);
+    });
+  } else if(step===6){
+    // 三、放學後
     const onceClone=document.getElementById("onceSection").cloneNode(true);
     onceClone.id="onceSectionMobile";
     onceClone.querySelectorAll(".once_cb_cramSubjects").forEach(cb=>{cb.addEventListener("change",updateOnceVisMobile);});
     onceClone.querySelectorAll('input[name="once_club_radio"]').forEach(rb=>{rb.addEventListener("change",updateOnceVisMobile);});
     onceClone.querySelectorAll('input[name="once_work_radio"]').forEach(rb=>{rb.addEventListener("change",updateOnceVisMobile);});
-    onceDiv.appendChild(onceClone);card.appendChild(onceDiv);
+    card.appendChild(onceClone);
     setTimeout(()=>{syncOnceToMobile();updateOnceVisMobile();},0);
   }
 }
@@ -702,30 +713,63 @@ function updateOnceVisMobile(){
   const wy=mob.querySelector('input[name="once_work_radio"][value="有"]:checked');
   const wdw=mob.querySelector("#workDetailWrap");if(wdw)wdw.style.display=wy?"block":"none";
 }
-function switchDay(dir){saveDraft();currentDayIndex=Math.max(0,Math.min(4,currentDayIndex+dir));updateDaySwitcher();}
-function updateDaySwitcher(){
-  if(!isMobile())return;
-  document.getElementById("dayLabel").textContent=DAY_NAMES[currentDayIndex];
-  document.getElementById("dayPrev").disabled=currentDayIndex===0;
-  document.getElementById("dayNext").disabled=currentDayIndex===4;
-  document.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("active",i===currentDayIndex));
-  buildMobileDayCard(currentDayIndex);restoreDraftToMobile();
-  const c=document.getElementById("mobileDayCard");if(c){c.addEventListener("change",()=>{syncMobileToOnce();saveDraft();});c.addEventListener("input",()=>{syncMobileToOnce();saveDraft();});}
-  // 手機版星期一：重新掛上起床/出門/到校防錯驗證（DOM 重建後監聽器會消失）
-  if(currentDayIndex===0)setupTimeOrderValidation();
+
+function mobileStepGo(dir){
+  // 離開目前步驟前先存檔
+  if(mobileStep===6)syncMobileToOnce();
+  saveDraft();
+  const next=mobileStep+dir;
+  if(next<0||next>6)return;
+  mobileStep=next;
+  renderMobileStep();
 }
+
+function renderMobileStep(){
+  document.getElementById("mobileStepLabel").textContent=`📌 步驟 ${mobileStep+1}／7：${MOBILE_STEP_LABELS[mobileStep]}`;
+  document.getElementById("mobileStepPrev").style.visibility=mobileStep===0?"hidden":"visible";
+  document.getElementById("mobileStepNext").textContent=mobileStep===6?"完成 ✓":"下一步 →";
+  buildMobileStep(mobileStep);
+  restoreDraftToMobile();
+  const c=document.getElementById("mobileDayCard");
+  if(c){c.addEventListener("change",saveDraft);c.addEventListener("input",saveDraft);}
+  // 早晨步驟：重新掛上起床/出門/到校防錯驗證
+  if(mobileStep===0)setupTimeOrderValidation();
+  draft_savePageState();
+}
+function draft_savePageState(){
+  try{
+    let draft={};const ex=localStorage.getItem(STORAGE_KEY);if(ex)draft=JSON.parse(ex);
+    draft["_mobileStep"]=mobileStep;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(draft));
+  }catch(e){}
+}
+
+function initMobilePage2(){
+  if(!isMobile())return;
+  document.getElementById("mobileStepNote").style.display="block";
+  document.getElementById("mobileStepNav").style.display="flex";
+  document.getElementById("page2NoteDesktop").style.display="none";
+  // 還原上次的步驟
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){const draft=JSON.parse(raw);if(draft["_mobileStep"]!==undefined)mobileStep=draft["_mobileStep"];}
+  }catch(e){}
+  renderMobileStep();
+}
+
 function restoreDraftToMobile(){
   try{
     const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const draft=JSON.parse(raw);
-    const col=DAY_KEYS[currentDayIndex];
+    let col=null;
+    if(mobileStep>=1&&mobileStep<=5)col=DAY_KEYS[mobileStep-1];
     document.querySelectorAll("#mobileDayCard select").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
     document.querySelectorAll("#mobileDayCard input[type=text]").forEach(el=>{if(el.id&&draft[el.id]!==undefined)el.value=draft[el.id];});
     document.querySelectorAll("#mobileDayCard input[type=checkbox],#mobileDayCard input[type=radio]").forEach(cb=>{
       if(cb.type==="radio"&&cb.name){const k="radio__"+cb.name+"__"+cb.value;if(draft[k]!==undefined)cb.checked=draft[k];}
       else{const k="cb__"+(cb.id||cb.className+"__"+cb.value);if(draft[k]!==undefined)cb.checked=draft[k];}
     });
-    const cl=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);const w=document.getElementById(`${col}_lunchDetailWrap`);if(w)w.style.display=(cl?.value==="學校午餐")?"block":"none";
-    if(currentDayIndex===0){syncOnceToMobile();updateOnceVisMobile();}
+    if(col){const cl=document.querySelector(`input[name="${col}_lunch_radio"]:checked`);const w=document.getElementById(`${col}_lunchDetailWrap`);if(w)w.style.display=(cl?.value==="學校午餐")?"block":"none";}
+    if(mobileStep===6){syncOnceToMobile();updateOnceVisMobile();}
   }catch(e){}
 }
 const WEEKEND_NAMES=["星期六","星期日"];const WEEKEND_KEYS=["sat","sun"];let currentWeekendIndex=0;
@@ -767,7 +811,7 @@ function updateWeekendSwitcher(){
   buildMobileWeekendCard(currentWeekendIndex);
   const c=document.getElementById("mobileWeekendCard");if(c){c.addEventListener("change",saveDraft);c.addEventListener("input",saveDraft);}
 }
-window.addEventListener("resize",()=>{if(isMobile()){updateDaySwitcher();updateWeekendSwitcher();}});
+window.addEventListener("resize",()=>{if(isMobile()&&currentPage===2){initMobilePage2();}if(isMobile()){updateWeekendSwitcher();}});
 // ── Init ──
 buildTable(WEEKDAY_ROWS,WEEKDAY_COLS,"weekdayBody");
 buildTable(WEEKEND_ROWS,WEEKEND_COLS,"weekendBody");
@@ -776,8 +820,8 @@ updateOnceVis();
 updateProgress();
 setupTimeOrderValidation();
 setupTimeOrderValidation();
-if(isMobile()){updateDaySwitcher();updateWeekendSwitcher();}
-document.querySelectorAll("#dayDots .dot").forEach(d=>{d.addEventListener("click",()=>{saveDraft();currentDayIndex=parseInt(d.dataset.d);updateDaySwitcher();});});
+if(isMobile()){if(currentPage===2)initMobilePage2();updateWeekendSwitcher();}
+
 document.querySelectorAll("#weekendDots .dot").forEach(d=>{d.addEventListener("click",()=>{currentWeekendIndex=parseInt(d.dataset.w);updateWeekendSwitcher();});});
 if(checkAlreadySubmitted()){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
