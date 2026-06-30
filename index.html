@@ -825,6 +825,11 @@ function renderMobileStep(){
   restoreDraftToMobile();
   const c=document.getElementById("mobileDayCard");
   if(c){
+    // 每次重新渲染前，先移除上次掛的監聽器，避免疊加造成不同步驟的監聽器互相干擾（例如在「放學後」誤觸發「在校」的同步函式，把資料覆寫成空白）
+    c.removeEventListener("change",syncMobileDailyToStandard);
+    c.removeEventListener("input",syncMobileDailyToStandard);
+    c.removeEventListener("change",saveDraft);
+    c.removeEventListener("input",saveDraft);
     if(mobileStep===1){
       c.addEventListener("change",syncMobileDailyToStandard);
       c.addEventListener("input",syncMobileDailyToStandard);
