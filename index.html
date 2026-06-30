@@ -702,7 +702,7 @@ function updateOnceVisMobile(){
   const wy=mob.querySelector('input[name="once_work_radio"][value="有"]:checked');
   const wdw=mob.querySelector("#workDetailWrap");if(wdw)wdw.style.display=wy?"block":"none";
 }
-function switchDay(dir){syncMobileToOnce();saveDraft();currentDayIndex=Math.max(0,Math.min(4,currentDayIndex+dir));updateDaySwitcher();}
+function switchDay(dir){saveDraft();currentDayIndex=Math.max(0,Math.min(4,currentDayIndex+dir));updateDaySwitcher();}
 function updateDaySwitcher(){
   if(!isMobile())return;
   document.getElementById("dayLabel").textContent=DAY_NAMES[currentDayIndex];
@@ -711,6 +711,8 @@ function updateDaySwitcher(){
   document.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("active",i===currentDayIndex));
   buildMobileDayCard(currentDayIndex);restoreDraftToMobile();
   const c=document.getElementById("mobileDayCard");if(c){c.addEventListener("change",()=>{syncMobileToOnce();saveDraft();});c.addEventListener("input",()=>{syncMobileToOnce();saveDraft();});}
+  // 手機版星期一：重新掛上起床/出門/到校防錯驗證（DOM 重建後監聽器會消失）
+  if(currentDayIndex===0)setupTimeOrderValidation();
 }
 function restoreDraftToMobile(){
   try{
@@ -775,7 +777,7 @@ updateProgress();
 setupTimeOrderValidation();
 setupTimeOrderValidation();
 if(isMobile()){updateDaySwitcher();updateWeekendSwitcher();}
-document.querySelectorAll("#dayDots .dot").forEach(d=>{d.addEventListener("click",()=>{syncMobileToOnce();saveDraft();currentDayIndex=parseInt(d.dataset.d);updateDaySwitcher();});});
+document.querySelectorAll("#dayDots .dot").forEach(d=>{d.addEventListener("click",()=>{saveDraft();currentDayIndex=parseInt(d.dataset.d);updateDaySwitcher();});});
 document.querySelectorAll("#weekendDots .dot").forEach(d=>{d.addEventListener("click",()=>{currentWeekendIndex=parseInt(d.dataset.w);updateWeekendSwitcher();});});
 if(checkAlreadySubmitted()){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
