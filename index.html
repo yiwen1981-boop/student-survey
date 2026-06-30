@@ -715,15 +715,8 @@ function updateOnceVisMobile(){
 }
 
 function mobileStepGo(dir){
-  // 從「一、早晨」要前進到「在校」之前，先驗證填寫完整與時間順序
+  // 從「一、早晨」要前進到「在校」之前，驗證起床/出門/到校的時間順序（與電腦版邏輯一致，只檢查順序，不強制必填）
   if(mobileStep===0&&dir>0){
-    const we=document.getElementById("once_wakeup");
-    const le=document.getElementById("once_leave");
-    const ae=document.getElementById("once_arrive");
-    if(we&&le&&ae&&(!we.value||!le.value||!ae.value)){
-      showToast("請先填寫起床、出門、到校時間","error-t");
-      return;
-    }
     if(!validateOnceTimeOrder())return;
   }
   // 離開目前步驟前先存檔
